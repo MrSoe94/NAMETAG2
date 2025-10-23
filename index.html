@@ -1,0 +1,2219 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pembuat Kartu / Name Tag Pro</title>
+    <!-- QR Code Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- html2canvas Library for Download -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            --danger-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --warning-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            --light-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --card-width: 400px;
+            --card-height: 600px;
+            --border-radius: 20px;
+            --shadow: 0 20px 60px rgba(0,0,0,0.3);
+            --transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --bg-color: #f8f9fa;
+            --text-color: #333;
+            --panel-bg: white;
+        }
+        .dark-mode {
+            --bg-color: #1e1e2f;
+            --text-color: #f0f0f0;
+            --panel-bg: #2d2d44;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: var(--font-family);
+            background: var(--primary-gradient);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: var(--text-color);
+        }
+        .dark-mode body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+        .container {
+            display: flex;
+            gap: 40px;
+            max-width: 1200px;
+            width: 100%;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: stretch;
+        }
+        .card-wrapper {
+            position: relative;
+            width: var(--card-width);
+            height: var(--card-height);
+            flex-shrink: 0;
+        }
+        .card-container {
+            perspective: 1000px;
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        .card-flipper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.8s;
+            transform-style: preserve-3d;
+        }
+        .card-flipper.flipped {
+            transform: rotateY(180deg);
+        }
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .card-front-decorative {
+            background: var(--light-gradient);
+        }
+        .card-front-decorative .decorative-circles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .card-front-decorative .circle {
+            position: absolute;
+            opacity: 0.6;
+            transition: var(--transition);
+        }
+        .shape-circle { border-radius: 50%; }
+        .shape-square { border-radius: 0; }
+        .shape-triangle { clip-path: polygon(50% 0%, 0% 100%, 100% 100%); }
+        .shape-hexagon { clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%); }
+        .shape-star { clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%, 50% 0%); }
+        .shape-diamond { clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); }
+        .shape-pentagon { clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%); }
+        .shape-heart {
+            clip-path: path('M12,21.35l-1.45-1.32C5.4,15.36,2,12.27,2,8.5C2,5.41,4.42,3,7.5,3c1.74,0,3.41,0.81,4.5,2.08C13.09,3.81,14.76,3,16.5,3C19.58,3,22,5.41,22,8.5c0,3.77-3.4,6.86-8.55,11.53L12,21.35z');
+            transform: scale(2);
+        }
+        .shape-arrow { clip-path: polygon(0% 20%, 60% 20%, 60% 0%, 100% 50%, 60% 100%, 60% 80%, 0% 80%); }
+        .shape-cross { clip-path: polygon(20% 0%, 80% 0%, 80% 20%, 100% 20%, 100% 80%, 80% 80%, 80% 100%, 20% 100%, 20% 80%, 0% 80%, 0% 20%, 20% 20%); }
+        .card-front-decorative .green-side-left,
+        .card-front-decorative .green-side-right {
+            position: absolute;
+            bottom: 0;
+            width: 80%;
+            height: 70px;
+            background: var(--success-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+            z-index: 10;
+        }
+        .card-front-decorative .green-side-left { 
+            left: -40%; 
+            transform: rotate(-90deg) translateX(50%); 
+            border-radius: 0 0 60px 0; 
+            transform-origin: center center;
+        }
+        .card-front-decorative .green-side-right { 
+            right: -40%; 
+            transform: rotate(90deg) translateX(50%); 
+            border-radius: 0 0 0 60px;
+            transform-origin: center center;
+        }
+        .card-front-decorative .dept-text { 
+            color: white; 
+            font-weight: bold; 
+            font-size: 18px; 
+            padding: 15px 0;
+            letter-spacing: 2px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        }
+        .card-front-plain::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 1;
+        }
+        .card-front-plain .card-header,
+        .card-front-plain .card-footer {
+            background: transparent;
+            z-index: 2;
+        }
+        .card-front-plain .company-name,
+        .card-front-plain .name-text,
+        .card-front-plain .nip-text {
+            color: white;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
+        }
+        .card-front-plain .dept-text { display: none; }
+        .card-header {
+            padding: 15px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            flex-shrink: 0;
+            z-index: 1;
+        }
+        .logo-container {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .logo-image { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .logo-placeholder { font-size: 24px; color: #adb5bd; }
+        .company-name { font-size: 18px; font-weight: bold; color: #333; }
+        .card-image-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            position: relative;
+            min-height: 0;
+            z-index: 1;
+        }
+        .person-image {
+            width: 300px;
+            height: 350px;
+            background: url('https://picsum.photos/seed/person-placeholder/300/350.jpg') center/cover;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            overflow: hidden;
+            max-width: 100%;
+            max-height: 100%;
+            flex-shrink: 0;
+        }
+        .person-image img { width: 100%; height: 100%; object-fit: cover; }
+        .card-footer {
+            padding: 15px;
+            text-align: center;
+            position: relative;
+            flex-shrink: 0;
+            z-index: 1;
+        }
+        .name-text { font-size: 24px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.2); }
+        .nip-text { font-size: 16px; margin-top: 5px; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); display: none; }
+        .nip-text.show { display: block; }
+        .card-back {
+            background: var(--primary-gradient);
+            padding: 20px;
+            transform: rotateY(180deg);
+            color: white;
+            display: flex;
+            flex-direction: column;
+        }
+        .card-back::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1;
+        }
+        .card-back > * { position: relative; z-index: 2; }
+        .back-title { 
+            font-size: 28px; 
+            font-weight: bold; 
+            text-transform: uppercase; 
+            letter-spacing: 2px; 
+            text-align: center; 
+            margin-bottom: 20px;
+            flex-shrink: 0;
+        }
+        .back-info { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            gap: 15px; 
+            margin-bottom: 20px;
+            overflow-y: auto;
+            min-height: 0;
+        }
+        .info-item { 
+            font-size: 18px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            text-align: center;
+            padding: 5px 0;
+        }
+        .qr-container { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            margin-top: auto;
+            flex-shrink: 0;
+        }
+        .qr-code {
+            width: 180px;
+            height: 180px;
+            background: white;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            padding: 15px;
+            position: relative;
+        }
+        .qr-code canvas, .qr-code img { display: block; width: 100% !important; height: 100% !important; }
+        .qr-info {
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 10px;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        .qr-code:hover .qr-info { opacity: 1; }
+        .control-panel {
+            background: var(--panel-bg);
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 450px;
+            height: var(--card-height);
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            color: var(--text-color);
+        }
+        .control-panel::-webkit-scrollbar { width: 8px; }
+        .control-panel::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        .control-panel::-webkit-scrollbar-thumb { background: var(--primary-gradient); border-radius: 10px; }
+        .panel-title { font-size: 24px; font-weight: bold; margin-bottom: 25px; color: #333; text-align: center; padding-bottom: 15px; border-bottom: 2px solid #f0f0f0; }
+        .panel-section { margin-bottom: 25px; }
+        .section-title { font-size: 14px; font-weight: 600; color: #667eea; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
+        .input-group { margin-bottom: 18px; }
+        .input-label { display: block; margin-bottom: 8px; color: #555; font-weight: 500; font-size: 13px; }
+        .input-field {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: var(--transition);
+            background: #fff;
+            color: #333;
+        }
+        .dark-mode .input-field {
+            background: #3a3a5a;
+            border-color: #555;
+            color: white;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .color-input { height: 45px; cursor: pointer; }
+        .template-selector {
+            display: flex;
+            gap: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 5px;
+        }
+        .template-option {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 13px;
+            font-weight: 500;
+            border: 2px solid transparent;
+        }
+        .template-option input[type="radio"] { display: none; }
+        .template-option.selected {
+            background: var(--primary-gradient);
+            color: white;
+        }
+        .template-option:not(.selected):hover {
+            background-color: #f0f0f0;
+        }
+        .dark-mode .template-option:not(.selected):hover {
+            background-color: #444;
+        }
+        .bg-control-group {
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .bg-type-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .bg-type-selector label {
+            flex: 1;
+            padding: 8px;
+            text-align: center;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 13px;
+        }
+        .bg-type-selector input[type="radio"]:checked + label {
+            background: var(--primary-gradient);
+            color: white;
+            border-color: #667eea;
+        }
+        .bg-option-content { display: none; }
+        .bg-option-content.active { display: block; }
+        .file-upload-wrapper { position: relative; overflow: hidden; display: inline-block; width: 100%; }
+        .file-upload-input { position: absolute; left: -9999px; }
+        .file-upload-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px;
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 14px;
+            color: #495057;
+        }
+        .dark-mode .file-upload-label {
+            background: #3a3a5a;
+            border-color: #555;
+            color: #ddd;
+        }
+        .file-upload-label:hover { background: #e9ecef; border-color: #667eea; }
+        .file-upload-label.has-file { background: #d4edda; border-color: #28a745; color: #155724; }
+        .file-upload-label.photo-upload { background: #fff3cd; border-color: #ffc107; color: #856404; }
+        .file-upload-label.photo-upload.has-file { background: #d1ecf1; border-color: #17a2b8; color: #0c5460; }
+        .file-name { flex: 1; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .font-control-group {
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .font-element-selector {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .font-element-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #555;
+        }
+        .font-dropdown {
+            width: 100%;
+            padding: 8px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 13px;
+            background-color: white;
+            transition: var(--transition);
+        }
+        .font-dropdown:focus {
+            outline: none;
+            border-color: '#667eea';
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .custom-font-upload {
+            margin-top: 10px;
+        }
+        .font-preview {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 16px;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .font-size-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .font-size-slider {
+            flex-grow: 1;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            outline: none;
+        }
+        .font-size-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--primary-gradient);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .font-size-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: var(--primary-gradient);
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+        .font-size-value {
+            min-width: 45px;
+            text-align: center;
+            font-weight: 600;
+            color: #667eea;
+            font-size: 13px;
+        }
+        .element-controls {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 1px solid #e0e0e0;
+            position: relative;
+        }
+        .dark-mode .element-controls {
+            background: #3a3a5a;
+            border-color: #555;
+        }
+        .element-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .element-title {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 13px;
+        }
+        .element-actions {
+            display: flex;
+            gap: 5px;
+        }
+        .element-properties {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .property-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .property-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .position-control {
+            grid-column: 1 / -1;
+            margin-top: 10px;
+        }
+        .position-sliders {
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+        }
+        .position-slider-group {
+            flex: 1;
+        }
+        .position-slider-label {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 3px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .position-slider {
+            width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            outline: none;
+        }
+        .position-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            background: var(--primary-gradient);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .position-slider::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            background: var(--primary-gradient);
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+        .add-element-btn {
+            width: 100%;
+            padding: 10px;
+            background: var(--success-gradient);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .add-element-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(17, 153, 142, 0.3);
+        }
+        .delete-element-btn {
+            background: var(--danger-gradient);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .delete-element-btn:hover {
+            transform: scale(1.05);
+        }
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn:hover { transform: translateY(-2px); }
+        .btn-primary { background: var(--primary-gradient); color: white; }
+        .btn-primary:hover { box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4); }
+        .btn-secondary { background: #f0f0f0; color: #333; }
+        .btn-secondary:hover { background: #e0e0e0; }
+        .btn-success { background: var(--success-gradient); color: white; }
+        .btn-success:hover { box-shadow: 0 5px 20px rgba(17, 153, 142, 0.4); }
+        .btn-warning { background: var(--danger-gradient); color: white; }
+        .btn-warning:hover { box-shadow: 0 5px 20px rgba(245, 87, 108, 0.4); }
+        .btn-small { padding: 6px 10px; font-size: 12px; }
+        .btn-group { display: flex; gap: 10px; margin-top: auto; padding-top: 20px; }
+        .flip-btn { width: 100%; margin-top: 15px; background: var(--success-gradient); }
+        .action-section { margin-top: 20px; padding-top: 20px; border-top: 2px solid #f0f0f0; }
+        .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        .action-btn {
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        .action-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        .action-btn:hover::before { left: 100%; }
+        .download-front { background: var(--primary-gradient); }
+        .download-back { background: var(--danger-gradient); }
+        .download-both, .print-btn, .save-template-btn, .load-template-btn, .export-template-btn, .import-template-btn { grid-column: 1 / -1; }
+        .download-both { background: var(--success-gradient); }
+        .print-btn { background: var(--warning-gradient); }
+        .save-template-btn { background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%); }
+        .load-template-btn { background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%); }
+        .export-template-btn { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .import-template-btn { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .flip-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.9);
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            color: #666;
+            z-index: 10;
+            transition: var(--transition);
+        }
+        .card-flipper.flipped .flip-indicator {
+            background: rgba(102, 126, 234, 0.9);
+            color: white;
+        }
+        .keyboard-hint {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 12px;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+        .keyboard-hint:hover { opacity: 1; }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        .loading-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loading-text { color: #333; font-size: 16px; font-weight: 600; }
+        .progress-bar {
+            width: 200px;
+            height: 6px;
+            background: #f0f0f0;
+            border-radius: 3px;
+            margin: 15px auto 0;
+            overflow: hidden;
+            display: none;
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--primary-gradient);
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        @media print {
+            body { background: white; padding: 0; }
+            .container { display: block; max-width: none; gap: 0; padding: 20px; }
+            .control-panel, .keyboard-hint, .flip-indicator, .theme-toggle { display: none !important; }
+            .card-wrapper {
+                width: var(--card-width);
+                height: var(--card-height);
+                margin: 0 auto 20px;
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            .card-flipper { transform: none !important; }
+            .card-face { position: relative; backface-visibility: visible; transform: none !important; }
+            .card-back { transform: none !important; }
+        }
+        @media (max-width: 768px) {
+            .container { flex-direction: column; align-items: center; }
+            .card-wrapper, .control-panel {
+                width: 350px;
+                height: 525px;
+            }
+            .control-panel { max-width: 350px; }
+            .keyboard-hint { display: none; }
+        }
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            z-index: 999;
+        }
+        .dark-mode .theme-toggle {
+            background: rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" id="themeToggle">🌙</button>
+    <div class="container">
+        <div class="card-wrapper">
+            <div class="flip-indicator" id="flipIndicator">Depan</div>
+            <div class="card-container">
+                <div class="card-flipper" id="cardFlipper">
+                    <div class="card-face card-front card-front-decorative" id="cardFront">
+                        <div class="decorative-circles" id="decorativeCirclesFront"></div>
+                        <div class="green-side-left" id="greenSideLeft"><div class="dept-text" id="deptTextLeft">OPERATOR</div></div>
+                        <div class="green-side-right" id="greenSideRight"><div class="dept-text" id="deptTextRight">OPERATOR</div></div>
+                        <div class="card-header">
+                            <div class="logo-container" id="logoContainer">
+                                <div class="logo-placeholder" id="logoPlaceholder">🏢</div>
+                                <img class="logo-image" id="logoImage" style="display: none;" alt="Logo">
+                            </div>
+                            <div class="company-name" id="companyName">UPT SD NEGERI 067953</div>
+                        </div>
+                        <div class="card-image-container">
+                            <div class="person-image" id="personImage">
+                                <img id="personImg" src="https://picsum.photos/seed/person-placeholder/300/350.jpg" alt="Person" style="display: block;">
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <div class="name-text" id="nameText">NAMA KAMU</div>
+                            <div class="nip-text" id="nipText">NIP: 1234567890</div>
+                        </div>
+                    </div>
+                    <div class="card-face card-back" id="cardBack">
+                        <div class="decorative-circles" id="decorativeCirclesBack"></div>
+                        <div class="back-title">CONTACT INFO</div>
+                        <div class="back-content">
+                            <div class="back-info">
+                                <div class="info-item"><span id="backNameDisplay">Nama Kamu</span></div>
+                                <div class="info-item"><span id="backNipDisplay">NIP</span></div>
+                                <div class="info-item"><span id="backEmailDisplay">email@gmail.com</span></div>
+                                <div class="info-item"><span id="backPhoneDisplay">+62 812 - 3456 - 7890</span></div>
+                                <div class="info-item"><span id="backPositionDisplay">OPERATOR</span></div>
+                                <div class="info-item"><span id="backOfficeDisplay">Medan</span></div>
+                            </div>
+                            <div class="qr-container">
+                                <div class="qr-code" id="qrcode"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="control-panel">
+            <h2 class="panel-title">📝 Panel Kontrol</h2>
+            <form id="controlForm">
+                <div class="panel-section">
+                    <div class="section-title"><span>🎨</span> Template Kartu</div>
+                    <div class="template-selector">
+                        <div class="template-option" data-template="decorative">
+                            <input type="radio" id="templateDecorative" name="cardTemplate" value="decorative" checked>
+                            <label for="templateDecorative"><span>✨ Dekoratif</span></label>
+                        </div>
+                        <div class="template-option" data-template="plain">
+                            <input type="radio" id="templatePlain" name="cardTemplate" value="plain">
+                            <label for="templatePlain"><span>🖼️ Polos</span></label>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-section" id="decorativeSection">
+                    <div class="section-title"><span>✨</span> Elemen Dekoratif</div>
+                    <div id="elementsContainer"></div>
+                    <button type="button" class="add-element-btn" id="addElementBtn">
+                        <span>➕</span><span>Tambah Elemen Baru</span>
+                    </button>
+                </div>
+                <div class="panel-section">
+                    <div class="section-title"><span>🏢</span> Branding</div>
+                    <div class="input-group">
+                        <label class="input-label">Logo Perusahaan</label>
+                        <div class="file-upload-wrapper">
+                            <input type="file" id="logoInput" class="file-upload-input" accept="image/*">
+                            <label for="logoInput" class="file-upload-label" id="logoLabel">
+                                <span>📁</span><span class="file-name">Pilih file logo...</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Nama Perusahaan</label>
+                        <input type="text" class="input-field" id="companyInput" value="UPT SD NEGERI 067953">
+                    </div>
+                </div>
+                <div class="panel-section">
+                    <div class="section-title"><span>🔤</span> Kustomisasi Font</div>
+                    <div class="font-control-group">
+                        <div class="font-element-selector"><span class="font-element-label">Nama Perusahaan</span></div>
+                        <select class="font-dropdown" id="companyFontSelect">
+                            <option value="'Segoe UI', Tahoma, Geneva, Verdana, sans-serif">Segoe UI (Default)</option>
+                            <option value="'Arial', sans-serif">Arial</option>
+                            <option value="'Times New Roman', serif">Times New Roman</option>
+                            <option value="'Courier New', monospace">Courier New</option>
+                            <option value="'Georgia', serif">Georgia</option>
+                            <option value="'Verdana', sans-serif">Verdana</option>
+                            <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+                            <option value="'Impact', sans-serif">Impact</option>
+                            <option value="'Comic Sans MS', cursive">Comic Sans MS</option>
+                            <option value="custom-company">Custom Font</option>
+                        </select>
+                        <div class="custom-font-upload" id="companyFontUpload" style="display: none;">
+                            <div class="file-upload-wrapper">
+                                <input type="file" id="companyFontInput" class="file-upload-input" accept=".ttf, .otf, .woff, .woff2">
+                                <label for="companyFontInput" class="file-upload-label" id="companyFontLabel">
+                                    <span>📁</span><span class="file-name">Pilih file font...</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="font-size-control">
+                            <label class="input-label" style="margin:0;">Ukuran:</label>
+                            <input type="range" class="font-size-slider" id="companyFontSizeInput" min="12" max="32" value="18">
+                            <span class="font-size-value" id="companyFontSizeValue">18px</span>
+                        </div>
+                        <div class="font-preview" id="companyFontPreview">UPT SD NEGERI 067953</div>
+                    </div>
+                    <div class="font-control-group">
+                        <div class="font-element-selector"><span class="font-element-label">Nama Lengkap</span></div>
+                        <select class="font-dropdown" id="nameFontSelect">
+                            <option value="'Segoe UI', Tahoma, Geneva, Verdana, sans-serif">Segoe UI (Default)</option>
+                            <option value="'Arial', sans-serif">Arial</option>
+                            <option value="'Times New Roman', serif">Times New Roman</option>
+                            <option value="'Courier New', monospace">Courier New</option>
+                            <option value="'Georgia', serif">Georgia</option>
+                            <option value="'Verdana', sans-serif">Verdana</option>
+                            <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+                            <option value="'Impact', sans-serif">Impact</option>
+                            <option value="'Comic Sans MS', cursive">Comic Sans MS</option>
+                            <option value="custom-name">Custom Font</option>
+                        </select>
+                        <div class="custom-font-upload" id="nameFontUpload" style="display: none;">
+                            <div class="file-upload-wrapper">
+                                <input type="file" id="nameFontInput" class="file-upload-input" accept=".ttf, .otf, .woff, .woff2">
+                                <label for="nameFontInput" class="file-upload-label" id="nameFontLabel">
+                                    <span>📁</span><span class="file-name">Pilih file font...</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="font-size-control">
+                            <label class="input-label" style="margin:0;">Ukuran:</label>
+                            <input type="range" class="font-size-slider" id="nameFontSizeInput" min="16" max="40" value="24">
+                            <span class="font-size-value" id="nameFontSizeValue">24px</span>
+                        </div>
+                        <div class="font-preview" id="nameFontPreview">NAMA KAMU</div>
+                    </div>
+                    <div class="font-control-group">
+                        <div class="font-element-selector"><span class="font-element-label">Teks Lainnya</span></div>
+                        <select class="font-dropdown" id="otherFontSelect">
+                            <option value="'Segoe UI', Tahoma, Geneva, Verdana, sans-serif">Segoe UI (Default)</option>
+                            <option value="'Arial', sans-serif">Arial</option>
+                            <option value="'Times New Roman', serif">Times New Roman</option>
+                            <option value="'Courier New', monospace">Courier New</option>
+                            <option value="'Georgia', serif">Georgia</option>
+                            <option value="'Verdana', sans-serif">Verdana</option>
+                            <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+                            <option value="'Impact', sans-serif">Impact</option>
+                            <option value="'Comic Sans MS', cursive">Comic Sans MS</option>
+                            <option value="custom-other">Custom Font</option>
+                        </select>
+                        <div class="custom-font-upload" id="otherFontUpload" style="display: none;">
+                            <div class="file-upload-wrapper">
+                                <input type="file" id="otherFontInput" class="file-upload-input" accept=".ttf, .otf, .woff, .woff2">
+                                <label for="otherFontInput" class="file-upload-label" id="otherFontLabel">
+                                    <span>📁</span><span class="file-name">Pilih file font...</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="font-size-control">
+                            <label class="input-label" style="margin:0;">Ukuran:</label>
+                            <input type="range" class="font-size-slider" id="otherFontSizeInput" min="10" max="24" value="16">
+                            <span class="font-size-value" id="otherFontSizeValue">16px</span>
+                        </div>
+                        <div class="font-preview" id="otherFontPreview">NIP: 1234567890</div>
+                    </div>
+                </div>
+                <div class="panel-section">
+                    <div class="section-title"><span>🖼️</span> Latar Belakang</div>
+                    <div class="bg-control-group">
+                        <div class="input-label">Background Depan</div>
+                        <div class="bg-type-selector">
+                            <input type="radio" id="frontBgColor" name="frontBgType" value="color" checked>
+                            <label for="frontBgColor">Warna</label>
+                            <input type="radio" id="frontBgImage" name="frontBgType" value="image">
+                            <label for="frontBgImage">Gambar</label>
+                        </div>
+                        <div class="bg-option-content active" id="frontBgColorContent">
+                            <input type="color" class="input-field color-input" id="frontBgColorInput" value="#f5f7fa">
+                        </div>
+                        <div class="bg-option-content" id="frontBgImageContent">
+                            <div class="file-upload-wrapper">
+                                <input type="file" id="frontBgInput" class="file-upload-input" accept="image/*">
+                                <label for="frontBgInput" class="file-upload-label" id="frontBgLabel">
+                                    <span>🖼️</span><span class="file-name">Pilih gambar...</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-control-group">
+                        <div class="input-label">Background Belakang</div>
+                        <div class="bg-type-selector">
+                            <input type="radio" id="backBgColor" name="backBgType" value="color" checked>
+                            <label for="backBgColor">Warna</label>
+                            <input type="radio" id="backBgImage" name="backBgType" value="image">
+                            <label for="backBgImage">Gambar</label>
+                        </div>
+                        <div class="bg-option-content active" id="backBgColorContent">
+                            <input type="color" class="input-field color-input" id="backBgColorInput" value="#667eea">
+                        </div>
+                        <div class="bg-option-content" id="backBgImageContent">
+                            <div class="file-upload-wrapper">
+                                <input type="file" id="backBgInput" class="file-upload-input" accept="image/*">
+                                <label for="backBgInput" class="file-upload-label" id="backBgLabel">
+                                    <span>🖼️</span><span class="file-name">Pilih gambar...</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-section">
+                    <div class="section-title"><span>👤</span> Info Personal</div>
+                    <div class="input-group">
+                        <label class="input-label">Foto Person</label>
+                        <div class="file-upload-wrapper">
+                            <input type="file" id="photoInput" class="file-upload-input" accept="image/*">
+                            <label for="photoInput" class="file-upload-label photo-upload" id="photoLabel">
+                                <span>📷</span><span class="file-name">Pilih foto person...</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="input-group"><label class="input-label">Nama Lengkap</label><input type="text" class="input-field" id="nameInput" value="NAMA KAMU"></div>
+                    <div class="input-group"><label class="input-label">NIP</label><input type="text" class="input-field" id="nipInput" value="1234567890" pattern="\d*"></div>
+                    <div class="input-group"><label class="input-label">Jabatan</label><input type="text" class="input-field" id="positionInput" value="OPERATOR"></div>
+                </div>
+                <div class="panel-section">
+                    <div class="section-title"><span>📞</span> Kontak</div>
+                    <div class="input-group"><label class="input-label">Email</label><input type="email" class="input-field" id="emailInput" value="email@gmail.com"></div>
+                    <div class="input-group"><label class="input-label">Telepon</label><input type="tel" class="input-field" id="phoneInput" value="+62 812-3456-7890"></div>
+                    <div class="input-group"><label class="input-label">Kantor</label><input type="text" class="input-field" id="officeInput" value="Medan"></div>
+                </div>
+                <div class="panel-section">
+                    <div class="section-title"><span>🎨</span> Desain</div>
+                    <div class="input-group">
+                        <label class="input-label">Warna Footer</label>
+                        <input type="color" class="input-field color-input" id="headerColorInput" value="#ff6b6b">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Warna Bilah Samping (Template Dekoratif)</label>
+                        <input type="color" class="input-field color-input" id="sideBarColorInput" value="#11998e">
+                    </div>
+                </div>
+            </form>
+            <div class="btn-group">
+                <button type="button" class="btn btn-primary" id="updateBtn">🔄 Update</button>
+                <button type="button" class="btn btn-secondary" id="resetBtn">🔄 Reset</button>
+                <button type="button" class="btn btn-warning" id="undoBtn">↩️ Undo</button>
+                <button type="button" class="btn btn-warning" id="redoBtn">↪️ Redo</button>
+            </div>
+            <button type="button" class="btn btn-success flip-btn" id="flipBtn">🔄 Balik Kartu</button>
+            <div class="action-section">
+                <div class="section-title"><span>⚡</span> Aksi Cepat</div>
+                <div class="action-grid">
+                    <button class="action-btn download-front" data-side="front">⬇️ Depan</button>
+                    <button class="action-btn download-back" data-side="back">⬇️ Belakang</button>
+                    <button class="action-btn download-both" data-side="both">⬇️ Kedua Sisi</button>
+                    <button class="action-btn print-btn" id="printBtn">🖨️ Cetak</button>
+                    <button class="action-btn save-template-btn" id="saveTemplateBtn">💾 Simpan Template</button>
+                    <button class="action-btn load-template-btn" id="loadTemplateBtn">📂 Muat Template</button>
+                    <button class="action-btn export-template-btn" id="exportTemplateBtn">📤 Ekspor JSON</button>
+                    <button class="action-btn import-template-btn" id="importTemplateBtn">📥 Impor JSON</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-text" id="loadingText">Memproses...</div>
+            <div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
+        </div>
+    </div>
+    <div class="keyboard-hint" id="keyboardHint">💡 Tekan <strong>F</strong> untuk balik kartu | <strong>Ctrl+Z</strong> Undo | <strong>Ctrl+Y</strong> Redo</div>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        class IDCardMaker {
+            constructor() {
+                this.history = [];
+                this.historyIndex = -1;
+                this.maxHistory = 50;
+                this.state = {
+                    logoUrl: null,
+                    photoUrl: null,
+                    isFlipped: false,
+                    template: 'decorative',
+                    frontBackground: { type: 'color', value: '#f5f7fa' },
+                    backBackground: { type: 'color', value: '#667eea' },
+                    fonts: {
+                        company: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+                        name: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+                        other: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+                    },
+                    fontSizes: {
+                        company: 18,
+                        name: 24,
+                        other: 16
+                    },
+                    customFonts: {
+                        company: null,
+                        name: null,
+                        other: null
+                    },
+                    sideBarColor: '#11998e',
+                    decorativeElements: {
+                        front: [
+                            { id: 1, visible: true, shape: 'circle', size: 80, x: 20, y: 20, color: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' },
+                            { id: 2, visible: true, shape: 'circle', size: 60, x: 320, y: 450, color: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)' },
+                            { id: 3, visible: true, shape: 'circle', size: 40, x: 350, y: 20, color: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)' }
+                        ],
+                        back: []
+                    },
+                    nextId: 4
+                };
+                this.cacheDOM();
+                this.initTheme();
+                this.init();
+            }
+            initTheme() {
+                const isDark = localStorage.getItem('darkMode') === 'true';
+                if (isDark) {
+                    document.body.classList.add('dark-mode');
+                    document.getElementById('themeToggle').textContent = '☀️';
+                }
+                document.getElementById('themeToggle').addEventListener('click', () => {
+                    document.body.classList.toggle('dark-mode');
+                    const isNowDark = document.body.classList.contains('dark-mode');
+                    localStorage.setItem('darkMode', isNowDark);
+                    document.getElementById('themeToggle').textContent = isNowDark ? '☀️' : '🌙';
+                });
+            }
+            cacheDOM() {
+                this.elements = {
+                    cardFlipper: document.getElementById('cardFlipper'),
+                    flipIndicator: document.getElementById('flipIndicator'),
+                    cardFront: document.getElementById('cardFront'),
+                    cardBack: document.getElementById('cardBack'),
+                    decorativeCirclesFront: document.getElementById('decorativeCirclesFront'),
+                    decorativeCirclesBack: document.getElementById('decorativeCirclesBack'),
+                    logoImage: document.getElementById('logoImage'),
+                    logoPlaceholder: document.getElementById('logoPlaceholder'),
+                    companyName: document.getElementById('companyName'),
+                    personImg: document.getElementById('personImg'),
+                    nameText: document.getElementById('nameText'),
+                    nipText: document.getElementById('nipText'),
+                    deptTextLeft: document.getElementById('deptTextLeft'),
+                    deptTextRight: document.getElementById('deptTextRight'),
+                    greenSideLeft: document.getElementById('greenSideLeft'),
+                    greenSideRight: document.getElementById('greenSideRight'),
+                    backNameDisplay: document.getElementById('backNameDisplay'),
+                    backNipDisplay: document.getElementById('backNipDisplay'),
+                    backEmailDisplay: document.getElementById('backEmailDisplay'),
+                    backPhoneDisplay: document.getElementById('backPhoneDisplay'),
+                    backPositionDisplay: document.getElementById('backPositionDisplay'),
+                    backOfficeDisplay: document.getElementById('backOfficeDisplay'),
+                    backTitle: document.querySelector('.back-title'),
+                    qrcode: document.getElementById('qrcode'),
+                    companyFontSelect: document.getElementById('companyFontSelect'),
+                    nameFontSelect: document.getElementById('nameFontSelect'),
+                    otherFontSelect: document.getElementById('otherFontSelect'),
+                    companyFontUpload: document.getElementById('companyFontUpload'),
+                    nameFontUpload: document.getElementById('nameFontUpload'),
+                    otherFontUpload: document.getElementById('otherFontUpload'),
+                    companyFontInput: document.getElementById('companyFontInput'),
+                    nameFontInput: document.getElementById('nameFontInput'),
+                    otherFontInput: document.getElementById('otherFontInput'),
+                    companyFontLabel: document.getElementById('companyFontLabel'),
+                    nameFontLabel: document.getElementById('nameFontLabel'),
+                    otherFontLabel: document.getElementById('otherFontLabel'),
+                    companyFontPreview: document.getElementById('companyFontPreview'),
+                    nameFontPreview: document.getElementById('nameFontPreview'),
+                    otherFontPreview: document.getElementById('otherFontPreview'),
+                    companyFontSizeInput: document.getElementById('companyFontSizeInput'),
+                    nameFontSizeInput: document.getElementById('nameFontSizeInput'),
+                    otherFontSizeInput: document.getElementById('otherFontSizeInput'),
+                    companyFontSizeValue: document.getElementById('companyFontSizeValue'),
+                    nameFontSizeValue: document.getElementById('nameFontSizeValue'),
+                    otherFontSizeValue: document.getElementById('otherFontSizeValue'),
+                    decorativeSection: document.getElementById('decorativeSection'),
+                    elementsContainer: document.getElementById('elementsContainer'),
+                    addElementBtn: document.getElementById('addElementBtn'),
+                    form: document.getElementById('controlForm'),
+                    logoInput: document.getElementById('logoInput'),
+                    photoInput: document.getElementById('photoInput'),
+                    frontBgColorInput: document.getElementById('frontBgColorInput'),
+                    frontBgInput: document.getElementById('frontBgInput'),
+                    backBgColorInput: document.getElementById('backBgColorInput'),
+                    backBgInput: document.getElementById('backBgInput'),
+                    headerColorInput: document.getElementById('headerColorInput'),
+                    sideBarColorInput: document.getElementById('sideBarColorInput'),
+                    updateBtn: document.getElementById('updateBtn'),
+                    resetBtn: document.getElementById('resetBtn'),
+                    flipBtn: document.getElementById('flipBtn'),
+                    undoBtn: document.getElementById('undoBtn'),
+                    redoBtn: document.getElementById('redoBtn'),
+                    downloadBtns: document.querySelectorAll('.action-btn[data-side]'),
+                    printBtn: document.getElementById('printBtn'),
+                    saveTemplateBtn: document.getElementById('saveTemplateBtn'),
+                    loadTemplateBtn: document.getElementById('loadTemplateBtn'),
+                    exportTemplateBtn: document.getElementById('exportTemplateBtn'),
+                    importTemplateBtn: document.getElementById('importTemplateBtn'),
+                    loadingOverlay: document.getElementById('loadingOverlay'),
+                    loadingText: document.getElementById('loadingText'),
+                    progressBar: document.getElementById('progressBar'),
+                    progressFill: document.getElementById('progressFill'),
+                    keyboardHint: document.getElementById('keyboardHint'),
+                    themeToggle: document.getElementById('themeToggle')
+                };
+            }
+            init() {
+                this.bindEvents();
+                this.renderElementsControls();
+                this.updateCard();
+                this.pushToHistory();
+                this.showNotification('Selamat datang! Versi Pro siap digunakan.');
+            }
+            bindEvents() {
+                this.elements.form.addEventListener('input', (e) => this.handleInputChange(e));
+                document.querySelectorAll('input[name="cardTemplate"]').forEach(radio => {
+                    radio.addEventListener('change', (e) => {
+                        this.updateTemplate();
+                        this.updateTemplateSelection(e.target.value);
+                    });
+                });
+                this.elements.addElementBtn.addEventListener('click', () => this.addNewElement());
+                ['company', 'name', 'other'].forEach(type => {
+                    this.elements[`${type}FontSelect`].addEventListener('change', (e) => this.handleFontChange(e, type));
+                    this.elements[`${type}FontSizeInput`].addEventListener('input', (e) => this.handleFontSizeChange(e, type));
+                    this.elements[`${type}FontInput`].addEventListener('change', (e) => this.handleFontUpload(e, type));
+                });
+                ['logo', 'photo', 'frontBg', 'backBg'].forEach(type => {
+                    this.elements[`${type}Input`].addEventListener('change', (e) => this.handleFileUpload(e, type));
+                });
+                ['front', 'back'].forEach(side => {
+                    document.querySelectorAll(`input[name="${side}BgType"]`).forEach(radio => {
+                        radio.addEventListener('change', () => this.toggleBackgroundOption(side));
+                    });
+                });
+                this.elements.updateBtn.addEventListener('click', () => this.updateCard());
+                this.elements.resetBtn.addEventListener('click', () => {
+                    if (confirm('Yakin ingin reset ke pengaturan awal?')) this.resetCard();
+                });
+                this.elements.flipBtn.addEventListener('click', () => this.flipCard());
+                this.elements.undoBtn.addEventListener('click', () => this.undo());
+                this.elements.redoBtn.addEventListener('click', () => this.redo());
+                this.elements.saveTemplateBtn.addEventListener('click', () => this.saveTemplate());
+                this.elements.loadTemplateBtn.addEventListener('click', () => this.loadTemplate());
+                this.elements.exportTemplateBtn.addEventListener('click', () => this.exportTemplate());
+                this.elements.importTemplateBtn.addEventListener('click', () => this.importTemplate());
+                this.elements.printBtn.addEventListener('click', () => this.printCard());
+                this.elements.downloadBtns.forEach(btn => {
+                    btn.addEventListener('click', () => this.downloadCard(btn.dataset.side));
+                });
+                document.addEventListener('keydown', (e) => {
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+                        e.preventDefault(); this.undo();
+                    } else if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'Z'))) {
+                        e.preventDefault(); this.redo();
+                    } else if ((e.key === 'f' || e.key === 'F') && !['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) {
+                        e.preventDefault(); this.flipCard();
+                    }
+                });
+                this.elements.elementsContainer.addEventListener('change', (e) => {
+                    if (e.target.classList.contains('shape-select')) {
+                        const id = parseInt(e.target.dataset.elementId);
+                        this.updateElement(id, 'shape', e.target.value);
+                    }
+                });
+                this.elements.elementsContainer.addEventListener('input', (e) => {
+                    if (e.target.classList.contains('size-slider')) {
+                        const id = parseInt(e.target.dataset.elementId);
+                        this.updateElement(id, 'size', parseInt(e.target.value));
+                    } else if (e.target.classList.contains('position-slider')) {
+                        const id = parseInt(e.target.dataset.elementId);
+                        const prop = e.target.dataset.property;
+                        this.updateElement(id, prop, parseInt(e.target.value));
+                    }
+                });
+                this.elements.elementsContainer.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('delete-element-btn')) {
+                        const id = parseInt(e.target.dataset.elementId);
+                        this.removeElement(id);
+                    }
+                });
+            }
+            updateTemplateSelection(value) {
+                document.querySelectorAll('.template-option').forEach(opt => {
+                    opt.classList.toggle('selected', opt.dataset.template === value);
+                });
+            }
+            renderElementsControls() {
+                const container = this.elements.elementsContainer;
+                container.innerHTML = '';
+                this.state.decorativeElements.front.forEach((el, idx) => {
+                    const div = document.createElement('div');
+                    div.className = 'element-controls';
+                    div.dataset.elementId = el.id;
+                    div.innerHTML = `
+                        <div class="element-header">
+                            <span class="element-title">Elemen ${idx + 1}</span>
+                            <div class="element-actions">
+                                <button type="button" class="delete-element-btn" data-element-id="${el.id}">Hapus</button>
+                            </div>
+                        </div>
+                        <div class="element-properties">
+                            <div class="property-group">
+                                <label class="property-label">Bentuk</label>
+                                <select class="input-field shape-select" data-element-id="${el.id}">
+                                    <option value="circle" ${el.shape === 'circle' ? 'selected' : ''}>Lingkaran</option>
+                                    <option value="square" ${el.shape === 'square' ? 'selected' : ''}>Persegi</option>
+                                    <option value="triangle" ${el.shape === 'triangle' ? 'selected' : ''}>Segitiga</option>
+                                    <option value="hexagon" ${el.shape === 'hexagon' ? 'selected' : ''}>Hexagon</option>
+                                    <option value="star" ${el.shape === 'star' ? 'selected' : ''}>Bintang</option>
+                                    <option value="diamond" ${el.shape === 'diamond' ? 'selected' : ''}>Berlian</option>
+                                    <option value="pentagon" ${el.shape === 'pentagon' ? 'selected' : ''}>Pentagon</option>
+                                    <option value="heart" ${el.shape === 'heart' ? 'selected' : ''}>Hati</option>
+                                    <option value="arrow" ${el.shape === 'arrow' ? 'selected' : ''}>Panah</option>
+                                    <option value="cross" ${el.shape === 'cross' ? 'selected' : ''}>Silang</option>
+                                </select>
+                            </div>
+                            <div class="property-group">
+                                <label class="property-label">Ukuran</label>
+                                <input type="range" class="font-size-slider size-slider" min="20" max="120" value="${el.size}" data-element-id="${el.id}">
+                            </div>
+                            <div class="position-control">
+                                <label class="property-label">Posisi</label>
+                                <div class="position-sliders">
+                                    <div class="position-slider-group">
+                                        <div class="position-slider-label">
+                                            <span>X:</span>
+                                            <span class="position-value-x" data-element-id="${el.id}">${el.x}</span>
+                                        </div>
+                                        <input type="range" class="position-slider" min="0" max="380" value="${el.x}" data-element-id="${el.id}" data-property="x">
+                                    </div>
+                                    <div class="position-slider-group">
+                                        <div class="position-slider-label">
+                                            <span>Y:</span>
+                                            <span class="position-value-y" data-element-id="${el.id}">${el.y}</span>
+                                        </div>
+                                        <input type="range" class="position-slider" min="0" max="580" value="${el.y}" data-element-id="${el.id}" data-property="y">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+            }
+            updateElement(id, prop, val) {
+                const el = this.state.decorativeElements.front.find(e => e.id === id);
+                if (el) {
+                    el[prop] = val;
+                    this.applyDecorativeStyles();
+                }
+            }
+            removeElement(id) {
+                this.state.decorativeElements.front = this.state.decorativeElements.front.filter(e => e.id !== id);
+                this.renderElementsControls();
+                this.applyDecorativeStyles();
+                this.showNotification('Elemen dihapus!');
+            }
+            addNewElement() {
+                const colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe', '#43e97b', '#38f9d7', '#fa709a', '#fee140'];
+                const newEl = {
+                    id: this.state.nextId++,
+                    visible: true,
+                    shape: 'circle',
+                    size: 50,
+                    x: 200,
+                    y: 300,
+                    color: `linear-gradient(135deg, ${colors[Math.floor(Math.random()*colors.length)]} 0%, ${colors[Math.floor(Math.random()*colors.length)]} 100%)`
+                };
+                this.state.decorativeElements.front.push(newEl);
+                this.renderElementsControls();
+                this.applyDecorativeStyles();
+                this.showNotification('Elemen baru ditambahkan!');
+            }
+            updateTemplate() {
+                const tmpl = document.querySelector('input[name="cardTemplate"]:checked').value;
+                this.state.template = tmpl;
+                this.elements.decorativeSection.style.display = tmpl === 'decorative' ? 'block' : 'none';
+                this.updateCard();
+            }
+            handleInputChange(e) {
+                if (e.target.id === 'frontBgColorInput') this.state.frontBackground = { type: 'color', value: e.target.value };
+                else if (e.target.id === 'backBgColorInput') this.state.backBackground = { type: 'color', value: e.target.value };
+                else if (e.target.id === 'sideBarColorInput') {
+                    this.state.sideBarColor = e.target.value;
+                    this.applySideBarColor(this.state.sideBarColor);
+                }
+                this.updateCard();
+            }
+            applyDecorativeStyles() {
+                this.elements.decorativeCirclesFront.innerHTML = '';
+                this.state.decorativeElements.front.forEach(el => {
+                    if (el.visible) {
+                        const dom = this.createElementDOM(el);
+                        this.elements.decorativeCirclesFront.appendChild(dom);
+                    }
+                });
+            }
+            createElementDOM(el) {
+                const dom = document.createElement('div');
+                dom.className = `circle shape-${el.shape}`;
+                dom.style.cssText = `
+                    position: absolute;
+                    width: ${el.size}px;
+                    height: ${el.size}px;
+                    left: ${el.x}px;
+                    top: ${el.y}px;
+                    background: ${el.color};
+                    opacity: 0.6;
+                    transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+                `;
+                return dom;
+            }
+            handleFontChange(e, type) {
+                const val = e.target.value;
+                if (val.startsWith('custom-')) {
+                    this.elements[`${type}FontUpload`].style.display = 'block';
+                } else {
+                    this.elements[`${type}FontUpload`].style.display = 'none';
+                    this.state.fonts[type] = val;
+                    this.updateFontPreview(type, val);
+                    this.applyFontToCard(type, val);
+                }
+            }
+            handleFontSizeChange(e, type) {
+                const size = parseInt(e.target.value);
+                this.state.fontSizes[type] = size;
+                this.elements[`${type}FontSizeValue`].textContent = `${size}px`;
+                this.updateFontPreview(type, this.state.fonts[type]);
+                this.applyFontSizeToCard(type, size);
+                this.adjustLayoutForFontSize(type, size);
+            }
+            adjustLayoutForFontSize(type, size) {
+                const header = document.querySelector('.card-header');
+                const footer = document.querySelector('.card-footer');
+                const backInfo = document.querySelector('.back-info');
+                if (type === 'company') header.style.paddingTop = size > 24 ? '10px' : '30px';
+                if (type === 'name') footer.style.paddingBottom = size > 30 ? '10px' : '30px';
+                if (type === 'other') backInfo.style.gap = size > 18 ? '10px' : '15px';
+            }
+            handleFontUpload(e, type) {
+                const file = e.target.files[0];
+                const label = this.elements[`${type}FontLabel`];
+                const span = label.querySelector('.file-name');
+                if (!file) {
+                    span.textContent = 'Pilih file font...';
+                    label.classList.remove('has-file');
+                    return;
+                }
+                if (!/\.(ttf|otf|woff2?)$/i.test(file.name)) {
+                    this.showNotification('Format font tidak didukung!', 'error');
+                    e.target.value = '';
+                    return;
+                }
+                if (file.size > 5 * 1024 * 1024) {
+                    this.showNotification('Ukuran maksimal 5MB!', 'error');
+                    e.target.value = '';
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    const fontName = `CustomFont_${type}_${Date.now()}`;
+                    const fontFace = new FontFace(fontName, `url(${ev.target.result})`);
+                    fontFace.load().then(() => {
+                        document.fonts.add(fontFace);
+                        this.state.customFonts[type] = fontName;
+                        this.state.fonts[type] = fontName;
+                        this.updateFontPreview(type, fontName);
+                        this.applyFontToCard(type, fontName);
+                        span.textContent = file.name;
+                        label.classList.add('has-file');
+                        this.showNotification(`Font ${type} berhasil dimuat!`);
+                    }).catch(err => {
+                        console.error(err);
+                        this.showNotification('Gagal memuat font!', 'error');
+                    });
+                };
+                reader.readAsDataURL(file);
+            }
+            updateFontPreview(type, font) {
+                const preview = this.elements[`${type}FontPreview`];
+                preview.style.fontFamily = font;
+                preview.style.fontSize = `${this.state.fontSizes[type]}px`;
+                const inputs = { company: 'companyInput', name: 'nameInput', other: 'nipInput' };
+                let text = document.getElementById(inputs[type])?.value || '';
+                if (type === 'company') text = text || 'UPT SD NEGERI 067953';
+                else if (type === 'name') text = text || 'NAMA KAMU';
+                else if (type === 'other') text = text ? `NIP: ${text}` : 'NIP: 1234567890';
+                preview.textContent = text;
+            }
+            applyFontToCard(type, font) {
+                const map = {
+                    company: [this.elements.companyName, this.elements.backTitle],
+                    name: [this.elements.nameText, this.elements.backNameDisplay],
+                    other: [
+                        this.elements.nipText, this.elements.backNipDisplay,
+                        this.elements.backEmailDisplay, this.elements.backPhoneDisplay,
+                        this.elements.backPositionDisplay, this.elements.backOfficeDisplay,
+                        this.elements.deptTextLeft, this.elements.deptTextRight
+                    ]
+                };
+                map[type]?.forEach(el => el.style.fontFamily = font);
+            }
+            applyFontSizeToCard(type, size) {
+                const map = {
+                    company: [this.elements.companyName, this.elements.backTitle],
+                    name: [this.elements.nameText, this.elements.backNameDisplay],
+                    other: [
+                        this.elements.nipText, this.elements.backNipDisplay,
+                        this.elements.backEmailDisplay, this.elements.backPhoneDisplay,
+                        this.elements.backPositionDisplay, this.elements.backOfficeDisplay,
+                        this.elements.deptTextLeft, this.elements.deptTextRight
+                    ]
+                };
+                map[type]?.forEach(el => el.style.fontSize = `${size}px`);
+            }
+            applySideBarColor(color) {
+                const grad = `linear-gradient(135deg, ${color} 0%, ${this.adjustColor(color, -20)} 100%)`;
+                this.elements.greenSideLeft.style.background = grad;
+                this.elements.greenSideRight.style.background = grad;
+            }
+            handleFileUpload(e, type) {
+                const file = e.target.files[0];
+                const label = document.getElementById(`${type}Label`);
+                const span = label?.querySelector('.file-name');
+                if (!file) {
+                    if (span) span.textContent = `Pilih file ${type}...`;
+                    label?.classList.remove('has-file');
+                    if (type === 'logo') this.state.logoUrl = null;
+                    if (type === 'photo') this.state.photoUrl = null;
+                    if (type === 'frontBg') this.state.frontBackground = { type: 'color', value: this.elements.frontBgColorInput.value };
+                    if (type === 'backBg') this.state.backBackground = { type: 'color', value: this.elements.backBgColorInput.value };
+                    this.updateCard();
+                    return;
+                }
+                if (!file.type.startsWith('image/')) {
+                    this.showNotification('File harus berupa gambar!', 'error');
+                    e.target.value = '';
+                    return;
+                }
+                if (file.size > 5 * 1024 * 1024) {
+                    this.showNotification('Ukuran maksimal 5MB!', 'error');
+                    e.target.value = '';
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    const url = ev.target.result;
+                    if (type === 'logo') {
+                        this.state.logoUrl = url;
+                        this.displayLogo(url);
+                    } else if (type === 'photo') {
+                        this.state.photoUrl = url;
+                        this.displayPhoto(url);
+                    } else if (type === 'frontBg') {
+                        this.state.frontBackground = { type: 'image', value: url };
+                    } else if (type === 'backBg') {
+                        this.state.backBackground = { type: 'image', value: url };
+                    }
+                    if (span) {
+                        span.textContent = file.name;
+                        label.classList.add('has-file');
+                    }
+                    this.updateCard();
+                    this.showNotification(`${type === 'frontBg' ? 'Background depan' : type === 'backBg' ? 'Background belakang' : type} berhasil diunggah!`);
+                };
+                reader.readAsDataURL(file);
+            }
+            toggleBackgroundOption(side) {
+                const type = document.querySelector(`input[name="${side}BgType"]:checked`).value;
+                const color = document.getElementById(`${side}BgColorContent`);
+                const image = document.getElementById(`${side}BgImageContent`);
+                if (type === 'color') {
+                    color.classList.add('active');
+                    image.classList.remove('active');
+                    if (side === 'front') this.state.frontBackground = { type: 'color', value: this.elements.frontBgColorInput.value };
+                    else this.state.backBackground = { type: 'color', value: this.elements.backBgColorInput.value };
+                } else {
+                    color.classList.remove('active');
+                    image.classList.add('active');
+                }
+                this.updateCard();
+            }
+            displayLogo(url) {
+                if (url) {
+                    this.elements.logoImage.src = url;
+                    this.elements.logoImage.style.display = 'block';
+                    this.elements.logoPlaceholder.style.display = 'none';
+                } else {
+                    this.elements.logoImage.style.display = 'none';
+                    this.elements.logoPlaceholder.style.display = 'block';
+                }
+            }
+            displayPhoto(url) {
+                this.elements.personImg.src = url || 'https://picsum.photos/seed/person-placeholder/300/350.jpg';
+            }
+            updateCard() {
+                const data = this.getFormData();
+                this.elements.cardFront.className = `card-face card-front card-front-${this.state.template}`;
+                if (this.state.frontBackground.type === 'image') {
+                    this.elements.cardFront.style.backgroundImage = `url(${this.state.frontBackground.value})`;
+                    this.elements.cardFront.style.backgroundSize = 'cover';
+                } else {
+                    this.elements.cardFront.style.backgroundImage = 'none';
+                    if (this.state.template === 'plain') {
+                        this.elements.cardFront.style.backgroundColor = this.state.frontBackground.value;
+                    } else {
+                        this.elements.cardFront.style.background = 'var(--light-gradient)';
+                    }
+                }
+                if (this.state.backBackground.type === 'image') {
+                    this.elements.cardBack.style.backgroundImage = `url(${this.state.backBackground.value})`;
+                    this.elements.cardBack.style.backgroundSize = 'cover';
+                } else {
+                    this.elements.cardBack.style.backgroundImage = 'none';
+                    this.elements.cardBack.style.backgroundColor = this.state.backBackground.value;
+                }
+                const decor = [this.elements.greenSideLeft, this.elements.greenSideRight];
+                if (this.state.template === 'plain') {
+                    decor.forEach(el => el.style.display = 'none');
+                    this.elements.decorativeCirclesFront.style.display = 'none';
+                } else {
+                    decor.forEach(el => {
+                        el.style.display = 'flex';
+                        el.style.position = 'absolute';
+                        el.style.bottom = '0';
+                        el.style.width = '80%';
+                        el.style.height = '70px';
+                        el.style.background = `linear-gradient(135deg, ${this.state.sideBarColor} 0%, ${this.adjustColor(this.state.sideBarColor, -20)} 100%)`;
+                        el.style.display = 'flex';
+                        el.style.alignItems = 'center';
+                        el.style.justifyContent = 'center';
+                        el.style.writingMode = 'vertical-rl';
+                        el.style.textOrientation = 'upright';
+                        el.style.zIndex = '10';
+                    });
+                    
+                    this.elements.greenSideLeft.style.left = '-40%';
+                    this.elements.greenSideLeft.style.transform = 'rotate(-90deg) translateX(50%)';
+                    this.elements.greenSideLeft.style.borderRadius = '0 0 60px 0';
+                    this.elements.greenSideLeft.style.transformOrigin = 'center center';
+                    
+                    this.elements.greenSideRight.style.right = '-40%';
+                    this.elements.greenSideRight.style.transform = 'rotate(90deg) translateX(50%)';
+                    this.elements.greenSideRight.style.borderRadius = '0 0 0 60px';
+                    this.elements.greenSideRight.style.transformOrigin = 'center center';
+                    
+                    this.elements.decorativeCirclesFront.style.display = 'block';
+                    this.applyDecorativeStyles();
+                }
+                this.elements.companyName.textContent = data.company;
+                this.elements.nameText.textContent = data.name;
+                this.elements.deptTextLeft.textContent = data.position;
+                this.elements.deptTextRight.textContent = data.position;
+                if (data.nip) {
+                    this.elements.nipText.textContent = `NIP: ${data.nip}`;
+                    this.elements.nipText.classList.add('show');
+                } else {
+                    this.elements.nipText.classList.remove('show');
+                }
+                this.elements.backNameDisplay.textContent = data.name;
+                this.elements.backNipDisplay.textContent = data.nip ? `NIP ${data.nip}` : '';
+                this.elements.backNipDisplay.style.display = data.nip ? 'block' : 'none';
+                this.elements.backEmailDisplay.textContent = data.email;
+                this.elements.backPhoneDisplay.textContent = data.phone.replace(/-/g, ' - ');
+                this.elements.backPositionDisplay.textContent = data.position;
+                this.elements.backOfficeDisplay.textContent = data.office;
+                if (this.state.template === 'decorative') {
+                    const footer = document.querySelector('.card-footer');
+                    footer.style.background = `linear-gradient(135deg, ${data.headerColor} 0%, ${this.adjustColor(data.headerColor, 20)} 100%)`;
+                } else {
+                    document.querySelector('.card-footer').style.background = '';
+                }
+                ['company', 'name', 'other'].forEach(type => {
+                    this.applyFontToCard(type, this.state.fonts[type]);
+                    this.applyFontSizeToCard(type, this.state.fontSizes[type]);
+                    this.adjustLayoutForFontSize(type, this.state.fontSizes[type]);
+                });
+                if (this.state.template === 'decorative') this.applySideBarColor(this.state.sideBarColor);
+                this.generateQRCode(data);
+                this.pushToHistory();
+            }
+            getFormData() {
+                return {
+                    company: this.elements.form.querySelector('#companyInput').value,
+                    name: this.elements.form.querySelector('#nameInput').value,
+                    nip: this.elements.form.querySelector('#nipInput').value,
+                    position: this.elements.form.querySelector('#positionInput').value,
+                    email: this.elements.form.querySelector('#emailInput').value,
+                    phone: this.elements.form.querySelector('#phoneInput').value,
+                    office: this.elements.form.querySelector('#officeInput').value,
+                    headerColor: this.elements.form.querySelector('#headerColorInput').value,
+                };
+            }
+            generateQRCode(data) {
+                const vcard = `BEGIN:VCARD
+VERSION:3.0
+FN:${data.name}
+N:;${data.name};;;
+ORG:${data.company}
+TITLE:${data.position}
+TEL:${data.phone}
+EMAIL:${data.email}
+ADR:;;${data.office};;;;
+END:VCARD`;
+                this.elements.qrcode.innerHTML = '';
+                new QRCode(this.elements.qrcode, {
+                    text: vcard,
+                    width: 170,
+                    height: 170,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            }
+            flipCard() {
+                this.state.isFlipped = !this.state.isFlipped;
+                this.elements.cardFlipper.classList.toggle('flipped');
+                this.elements.flipIndicator.textContent = this.state.isFlipped ? 'Belakang' : 'Depan';
+            }
+            resetCard() {
+                this.elements.form.reset();
+                Object.assign(this.state, {
+                    logoUrl: null,
+                    photoUrl: null,
+                    isFlipped: false,
+                    template: 'decorative',
+                    frontBackground: { type: 'color', value: '#f5f7fa' },
+                    backBackground: { type: 'color', value: '#667eea' },
+                    fonts: {
+                        company: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+                        name: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+                        other: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+                    },
+                    fontSizes: { company: 18, name: 24, other: 16 },
+                    customFonts: { company: null, name: null, other: null },
+                    sideBarColor: '#11998e',
+                    decorativeElements: {
+                        front: [
+                            { id: 1, visible: true, shape: 'circle', size: 80, x: 20, y: 20, color: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' },
+                            { id: 2, visible: true, shape: 'circle', size: 60, x: 320, y: 450, color: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)' },
+                            { id: 3, visible: true, shape: 'circle', size: 40, x: 350, y: 20, color: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)' }
+                        ],
+                        back: []
+                    },
+                    nextId: 4
+                });
+                this.displayLogo(null);
+                this.displayPhoto(null);
+                ['logo', 'photo', 'frontBg', 'backBg'].forEach(type => {
+                    const label = document.getElementById(`${type}Label`);
+                    if (label) {
+                        label.querySelector('.file-name').textContent = `Pilih file ${type}...`;
+                        label.classList.remove('has-file');
+                    }
+                });
+                ['company', 'name', 'other'].forEach(type => {
+                    document.getElementById(`${type}FontUpload`).style.display = 'none';
+                    document.getElementById(`${type}FontLabel`).querySelector('.file-name').textContent = 'Pilih file font...';
+                    document.getElementById(`${type}FontLabel`).classList.remove('has-file');
+                    this.elements[`${type}FontSizeInput`].value = this.state.fontSizes[type];
+                    this.elements[`${type}FontSizeValue`].textContent = `${this.state.fontSizes[type]}px`;
+                });
+                document.querySelector('.card-header').style.paddingTop = '';
+                document.querySelector('.card-footer').style.paddingBottom = '';
+                document.querySelector('.back-info').style.gap = '';
+                document.querySelector('input[name="frontBgType"][value="color"]').checked = true;
+                document.querySelector('input[name="backBgType"][value="color"]').checked = true;
+                this.toggleBackgroundOption('front');
+                this.toggleBackgroundOption('back');
+                document.querySelector('input[name="cardTemplate"][value="decorative"]').checked = true;
+                this.updateTemplateSelection('decorative');
+                this.elements.decorativeSection.style.display = 'block';
+                this.renderElementsControls();
+                this.updateCard();
+                this.showNotification('Kartu direset ke default');
+            }
+            pushToHistory() {
+                const snapshot = JSON.parse(JSON.stringify(this.state));
+                const formData = {};
+                const inputs = this.elements.form.querySelectorAll('input, select, textarea');
+                inputs.forEach(input => {
+                    if (input.type === 'file') return;
+                    formData[input.id || input.name] = input.value;
+                });
+                snapshot.formData = formData;
+                if (this.historyIndex < this.history.length - 1) {
+                    this.history = this.history.slice(0, this.historyIndex + 1);
+                }
+                this.history.push(snapshot);
+                if (this.history.length > this.maxHistory) {
+                    this.history.shift();
+                } else {
+                    this.historyIndex++;
+                }
+                this.updateUndoRedoButtons();
+            }
+            updateUndoRedoButtons() {
+                this.elements.undoBtn.disabled = this.historyIndex <= 0;
+                this.elements.redoBtn.disabled = this.historyIndex >= this.history.length - 1;
+            }
+            undo() {
+                if (this.historyIndex > 0) {
+                    this.historyIndex--;
+                    this.applyHistoryState(this.history[this.historyIndex]);
+                }
+            }
+            redo() {
+                if (this.historyIndex < this.history.length - 1) {
+                    this.historyIndex++;
+                    this.applyHistoryState(this.history[this.historyIndex]);
+                }
+            }
+            applyHistoryState(state) {
+                this.state = JSON.parse(JSON.stringify(state));
+                Object.entries(state.formData || {}).forEach(([key, value]) => {
+                    const el = document.getElementById(key) || document.querySelector(`[name="${key}"]`);
+                    if (el && el.type !== 'file') el.value = value;
+                });
+                this.displayLogo(this.state.logoUrl);
+                this.displayPhoto(this.state.photoUrl);
+                this.renderElementsControls();
+                this.updateTemplateSelection(this.state.template);
+                this.elements.decorativeSection.style.display = this.state.template === 'decorative' ? 'block' : 'none';
+                this.updateCard();
+                this.updateUndoRedoButtons();
+            }
+            saveTemplate() {
+                localStorage.setItem('idCardTemplate', JSON.stringify(this.state));
+                this.showNotification('Template berhasil disimpan!');
+            }
+            loadTemplate() {
+                const saved = localStorage.getItem('idCardTemplate');
+                if (!saved) {
+                    this.showNotification('Tidak ada template tersimpan!', 'error');
+                    return;
+                }
+                try {
+                    const state = JSON.parse(saved);
+                    this.state = state;
+                    this.applyHistoryState(state);
+                    this.showNotification('Template berhasil dimuat!');
+                } catch (e) {
+                    this.showNotification('Gagal memuat template!', 'error');
+                }
+            }
+            exportTemplate() {
+                const dataStr = JSON.stringify(this.state, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(dataBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'id-card-template.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                this.showNotification('Template diekspor sebagai file JSON!');
+            }
+            importTemplate() {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.json';
+                input.onchange = e => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = ev => {
+                        try {
+                            const state = JSON.parse(ev.target.result);
+                            this.state = state;
+                            this.applyHistoryState(state);
+                            this.showNotification('Template diimpor dari file!');
+                        } catch (err) {
+                            this.showNotification('Format file tidak valid!', 'error');
+                        }
+                    };
+                    reader.readAsText(file);
+                };
+                input.click();
+            }
+            printCard() {
+                const printWindow = window.open('', '_blank');
+                const data = this.getFormData();
+                const cardHtml = `
+                    <html>
+                    <head>
+                        <title>Cetak Kartu</title>
+                        <style>
+                            body { margin: 0; padding: 0; background: white; font-family: Arial, sans-serif; }
+                            .a4 { width: 210mm; height: 297mm; padding: 10mm; box-sizing: border-box; }
+                            .grid { display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(3, 1fr); gap: 10mm; height: 100%; }
+                            .card-wrapper { width: 90mm; height: 135mm; }
+                            .card-face { width: 100%; height: 100%; border-radius: 5mm; overflow: hidden; position: relative; }
+                            .green-side-left, .green-side-right {
+                                position: absolute;
+                                bottom: 0;
+                                width: 80%;
+                                height: 70px;
+                                background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                writing-mode: vertical-rl;
+                                text-orientation: upright;
+                                z-index: 10;
+                            }
+                            .green-side-left { 
+                                left: -40%; 
+                                transform: rotate(-90deg) translateX(50%); 
+                                border-radius: 0 0 60px 0; 
+                                transform-origin: center center;
+                            }
+                            .green-side-right { 
+                                right: -40%; 
+                                transform: rotate(90deg) translateX(50%); 
+                                border-radius: 0 0 0 60px;
+                                transform-origin: center center;
+                            }
+                            .dept-text { 
+                                color: white; 
+                                font-weight: bold; 
+                                font-size: 18px; 
+                                padding: 15px 0;
+                                letter-spacing: 2px;
+                                text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+                            }
+                            .card-header { padding: 5mm; text-align: center; }
+                            .card-image-container { flex: 1; display: flex; justify-content: center; align-items: center; padding: 2.5mm; }
+                            .card-footer { padding: 5mm; text-align: center; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="a4">
+                            <div class="grid">
+                                ${Array(6).fill().map(() => `
+                                    <div class="card-wrapper">
+                                        <div class="card-face card-front-decorative">
+                                            <div class="green-side-left"><div class="dept-text">${data.position}</div></div>
+                                            <div class="green-side-right"><div class="dept-text">${data.position}</div></div>
+                                            <div class="card-header">
+                                                <div class="logo-container" style="width:15mm;height:15mm;display:flex;align-items:center;justify-content:center;border-radius:2.5mm;overflow:hidden;">
+                                                    <span>🏢</span>
+                                                </div>
+                                                <div class="company-name" style="font-size:4.5mm;font-weight:bold;color:#333;">${data.company}</div>
+                                            </div>
+                                            <div class="card-image-container">
+                                                <div class="person-image" style="width:67.5mm;height:78.75mm;background:url('https://picsum.photos/seed/person-placeholder/300/350.jpg') center/cover;border-radius:3.75mm;"></div>
+                                            </div>
+                                            <div class="card-footer">
+                                                <div class="name-text" style="font-size:6mm;font-weight:bold;">${data.name}</div>
+                                                ${data.nip ? `<div class="nip-text" style="font-size:4mm;">NIP: ${data.nip}</div>` : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </body>
+                    </html>
+                `;
+                printWindow.document.write(cardHtml);
+                printWindow.document.close();
+                printWindow.onload = () => {
+                    printWindow.focus();
+                    printWindow.print();
+                    printWindow.close();
+                };
+            }
+            async downloadCard(side) {
+                const sideText = { front: 'Depan', back: 'Belakang', both: 'Kedua Sisi' }[side] || 'Kartu';
+                this.showLoading(`Mengunduh sisi ${sideText}...`, true);
+                this.updateProgress(5);
+                try {
+                    const original = this.state.isFlipped;
+                    const temp = this._createTempContainer(side);
+                    document.body.appendChild(temp);
+                    this.updateProgress(30);
+                    await new Promise(r => setTimeout(r, 100));
+                    const canvas = await html2canvas(temp, {
+                        scale: 2,
+                        useCORS: true,
+                        backgroundColor: null,
+                        width: side === 'both' ? 840 : 400,
+                        height: 600,
+                        logging: false
+                    });
+                    this.updateProgress(80);
+                    document.body.removeChild(temp);
+                    if (original !== this.state.isFlipped) this.flipCard();
+                    this._triggerDownload(canvas, this._generateFileName(side));
+                    this.updateProgress(100);
+                    setTimeout(() => {
+                        this.hideLoading();
+                        this.showNotification(`✅ Sisi ${sideText} berhasil diunduh!`);
+                    }, 300);
+                } catch (err) {
+                    console.error(err);
+                    this.hideLoading();
+                    this.showNotification(`❌ Gagal mengunduh: ${err.message}`, 'error');
+                }
+            }
+            _createTempContainer(side) {
+                const div = document.createElement('div');
+                div.style.cssText = `
+                    position: absolute;
+                    left: -9999px;
+                    top: 0;
+                    background: white;
+                    width: ${side === 'both' ? '840px' : '400px'};
+                    height: 600px;
+                    display: ${side === 'both' ? 'flex' : 'flex'};
+                    gap: ${side === 'both' ? '40px' : '0'};
+                    justify-content: center;
+                    align-items: center;
+                `;
+                if (side === 'both') {
+                    div.appendChild(this._cloneCardSide('front'));
+                    div.appendChild(this._cloneCardSide('back'));
+                } else {
+                    div.appendChild(this._cloneCardSide(side));
+                }
+                return div;
+            }
+            _cloneCardSide(side) {
+                const orig = document.getElementById(`card${side.charAt(0).toUpperCase() + side.slice(1)}`);
+                const clone = orig.cloneNode(true);
+                clone.style.cssText = `
+                    position: relative;
+                    width: 400px;
+                    height: 600px;
+                    transform: none !important;
+                    backface-visibility: visible !important;
+                    overflow: hidden;
+                    margin: 0;
+                `;
+                this._fixCloneStyling(clone);
+                return clone;
+            }
+            _fixCloneStyling(clone) {
+                const greenLeft = clone.querySelector('.green-side-left');
+                const greenRight = clone.querySelector('.green-side-right');
+                
+                if (greenLeft) {
+                    greenLeft.style.cssText = `
+                        position: absolute;
+                        bottom: 0;
+                        left: -40%;
+                        width: 80%;
+                        height: 70px;
+                        background: linear-gradient(135deg, ${this.state.sideBarColor} 0%, ${this.adjustColor(this.state.sideBarColor, -20)} 100%);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        writing-mode: vertical-rl;
+                        text-orientation: upright;
+                        z-index: 10;
+                        transform: rotate(-90deg) translateX(50%);
+                        border-radius: 0 0 60px 0;
+                        transform-origin: center center;
+                    `;
+                }
+                
+                if (greenRight) {
+                    greenRight.style.cssText = `
+                        position: absolute;
+                        bottom: 0;
+                        right: -40%;
+                        width: 80%;
+                        height: 70px;
+                        background: linear-gradient(135deg, ${this.state.sideBarColor} 0%, ${this.adjustColor(this.state.sideBarColor, -20)} 100%);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        writing-mode: vertical-rl;
+                        text-orientation: upright;
+                        z-index: 10;
+                        transform: rotate(90deg) translateX(50%);
+                        border-radius: 0 0 0 60px;
+                        transform-origin: center center;
+                    `;
+                }
+                
+                const circles = clone.querySelectorAll('.circle');
+                circles.forEach(c => {
+                    const shape = Array.from(c.classList).find(cls => cls.startsWith('shape-'))?.replace('shape-', '');
+                    if (shape) this.applyClipPathInline(c, shape);
+                });
+            }
+            applyClipPathInline(el, shape) {
+                const paths = {
+                    circle: '50%',
+                    square: '0',
+                    triangle: 'polygon(50% 0%, 0% 100%, 100% 100%)',
+                    hexagon: 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)',
+                    star: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%, 50% 0%)',
+                    diamond: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
+                    pentagon: 'polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%)',
+                    heart: 'path("M12,21.35l-1.45-1.32C5.4,15.36,2,12.27,2,8.5C2,5.41,4.42,3,7.5,3c1.74,0,3.41,0.81,4.5,2.08C13.09,3.81,14.76,3,16.5,3C19.58,3,22,5.41,22,8.5c0,3.77-3.4,6.86-8.55,11.53L12,21.35z")',
+                    arrow: 'polygon(0% 20%, 60% 20%, 60% 0%, 100% 50%, 60% 100%, 60% 80%, 0% 80%)',
+                    cross: 'polygon(20% 0%, 80% 0%, 80% 20%, 100% 20%, 100% 80%, 80% 80%, 80% 100%, 20% 100%, 20% 80%, 0% 80%, 0% 20%, 20% 20%)'
+                };
+                el.className = el.className.replace(/shape-\w+/g, '');
+                if (shape === 'circle') {
+                    el.style.borderRadius = paths.circle;
+                    el.style.clipPath = 'none';
+                } else {
+                    el.style.borderRadius = '0';
+                    el.style.clipPath = paths[shape];
+                    el.style.webkitClipPath = paths[shape];
+                }
+                if (shape === 'heart') el.style.transform = 'scale(2)';
+                else el.style.transform = 'none';
+            }
+            _triggerDownload(canvas, filename) {
+                canvas.toBlob(blob => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    setTimeout(() => URL.revokeObjectURL(url), 100);
+                }, 'image/png');
+            }
+            _generateFileName(side) {
+                const name = this.elements.form.querySelector('#nameInput').value || 'kartu';
+                const clean = name.replace(/\s+/g, '_');
+                const suffix = { front: '_Depan', back: '_Belakang', both: '_Kedua_Sisi' }[side] || '';
+                return `${clean}_ID_Card${suffix}.png`;
+            }
+            showLoading(text, showProgress = false) {
+                this.elements.loadingText.textContent = text;
+                this.elements.progressBar.style.display = showProgress ? 'block' : 'none';
+                this.elements.progressFill.style.width = '0%';
+                this.elements.loadingOverlay.style.display = 'flex';
+            }
+            updateProgress(p) {
+                this.elements.progressFill.style.width = `${p}%`;
+            }
+            hideLoading() {
+                this.elements.loadingOverlay.style.display = 'none';
+            }
+            showNotification(msg, type = 'success') {
+                const notif = document.createElement('div');
+                notif.style.cssText = `
+                    position: fixed; top: 20px; right: 20px;
+                    background: ${type === 'error' ? 'var(--danger-gradient)' : 'var(--primary-gradient)'};
+                    color: white; padding: 15px 25px; border-radius: 10px;
+                    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+                    z-index: 10000; animation: slideIn 0.3s ease;
+                `;
+                notif.textContent = msg;
+                document.body.appendChild(notif);
+                setTimeout(() => {
+                    notif.style.animation = 'slideOut 0.3s ease';
+                    setTimeout(() => notif.remove(), 300);
+                }, 3000);
+            }
+            adjustColor(hex, amt) {
+                let num = parseInt(hex.replace('#', ''), 16);
+                let r = Math.min(255, Math.max(0, ((num >> 16) & 255) + amt));
+                let g = Math.min(255, Math.max(0, ((num >> 8) & 255) + amt));
+                let b = Math.min(255, Math.max(0, (num & 255) + amt));
+                return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
+            }
+        }
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+            @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+        `;
+        document.head.appendChild(style);
+        new IDCardMaker();
+    });
+    </script>
+</body>
+</html>
