@@ -964,7 +964,7 @@ input:checked + .toggle-label:before {
                         </div>
                         
                         <div class="card-footer">
-                            <div class="name-text" id="nameText">NAMA KAMU</div>
+                            <div class="name-text" id="nameText">SUGANDI,S.Kom</div>
                             <div class="nip-text" id="nipText">NIP: 1234567890</div>
                         </div>
                     </div>
@@ -975,12 +975,12 @@ input:checked + .toggle-label:before {
                         <div class="back-title">CONTACT INFO</div>
                         <div class="back-content">
                             <div class="back-info">
-                                <div class="info-item"><span id="backNameDisplay">Nama Kamu</span></div>
+                                <div class="info-item"><span id="backNameDisplay">Sugandi,S.Kom</span></div>
                                 <div class="info-item"><span id="backNipDisplay">NIP</span></div>
-                                <div class="info-item"><span id="backEmailDisplay">email@gmail.com</span></div>
-                                <div class="info-item"><span id="backPhoneDisplay">+62 812 - 3456 - 7890</span></div>
+                                <div class="info-item"><span id="backEmailDisplay">sugandigtexs@gmail.com</span></div>
+                                <div class="info-item"><span id="backPhoneDisplay">+62 852 - 0646 - 1713</span></div>
                                 <div class="info-item"><span id="backPositionDisplay">OPERATOR</span></div>
-                                <div class="info-item"><span id="backOfficeDisplay">Medan</span></div>
+                                <div class="info-item"><span id="backOfficeDisplay">Medan Deli</span></div>
                             </div>
                             <div class="qr-container">
                                 <div class="qr-code" id="qrcode"></div>
@@ -1108,7 +1108,7 @@ input:checked + .toggle-label:before {
                             <input type="range" class="font-size-slider" id="nameFontSizeInput" min="16" max="40" value="24">
                             <span class="font-size-value" id="nameFontSizeValue">24px</span>
                         </div>
-                        <div class="font-preview" id="nameFontPreview">NAMA KAMU</div>
+                        <div class="font-preview" id="nameFontPreview">SUGANDI,S.Kom</div>
                     </div>
                     
                     <!-- Font for Other Text -->
@@ -1206,7 +1206,7 @@ input:checked + .toggle-label:before {
                             </label>
                         </div>
                     </div>
-                    <div class="input-group"><label class="input-label">Nama Lengkap</label><input type="text" class="input-field" id="nameInput" value="NAMA KAMU"></div>
+                    <div class="input-group"><label class="input-label">Nama Lengkap</label><input type="text" class="input-field" id="nameInput" value="SUGANDI,S.Kom"></div>
                     <div class="input-group"><label class="input-label">NIP</label><input type="text" class="input-field" id="nipInput" value="1234567890"></div>
                     <div class="input-group"><label class="input-label">Jabatan</label><input type="text" class="input-field" id="positionInput" value="OPERATOR"></div>
                     <!-- Tambahkan toggle untuk jabatan -->
@@ -1225,9 +1225,9 @@ input:checked + .toggle-label:before {
                 <!-- Contact Section -->
                 <div class="panel-section">
                     <div class="section-title"><span>📞</span> Kontak</div>
-                    <div class="input-group"><label class="input-label">Email</label><input type="email" class="input-field" id="emailInput" value="email@gmail.com"></div>
-                    <div class="input-group"><label class="input-label">Telepon</label><input type="tel" class="input-field" id="phoneInput" value="+62 812-3456-7890"></div>
-                    <div class="input-group"><label class="input-label">Kantor</label><input type="text" class="input-field" id="officeInput" value="Medan"></div>
+                    <div class="input-group"><label class="input-label">Email</label><input type="email" class="input-field" id="emailInput" value="sugandigtexs@gmail.com"></div>
+                    <div class="input-group"><label class="input-label">Telepon</label><input type="tel" class="input-field" id="phoneInput" value="+62 852-0646-1713"></div>
+                    <div class="input-group"><label class="input-label">Kantor</label><input type="text" class="input-field" id="officeInput" value="Medan Deli"></div>
                 </div>
 
                 <!-- Design Section -->
@@ -1899,7 +1899,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (elementType === 'company') {
                 preview.textContent = document.getElementById('companyInput').value || 'UPT SD NEGERI 067953';
             } else if (elementType === 'name') {
-                preview.textContent = document.getElementById('nameInput').value || 'NAMA KAMU';
+                preview.textContent = document.getElementById('nameInput').value || 'SUGANDI,S.Kom';
             } else if (elementType === 'other') {
                 preview.textContent = document.getElementById('nipInput').value ? `NIP: ${document.getElementById('nipInput').value}` : 'NIP: 1234567890';
             }
