@@ -2172,7 +2172,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         generateQRCode(data) {
-            const vcardData = `BEGIN:VCARD\nVERSION:3.0\nFN:${data.name}\nN:;${data.name};;;\nORG:${data.company}\nTITLE:${data.position}\nTEL:${data.phone}\nEMAIL:${data.email}\nADR:;;${data.office};;;;\nEND:VCARD`;
+            const vcardData = `${data.name}\n${data.nip}\n${data.company}\n${data.position}\n${data.phone}\n${data.email}\n${data.office}\n`;
             
             this.elements.qrcode.innerHTML = '';
             new QRCode(this.elements.qrcode, {
