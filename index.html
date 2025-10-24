@@ -917,6 +917,21 @@ input:checked + .toggle-label:before {
 .green-side-left.hidden, .green-side-right.hidden {
     display: none !important;
 }
+
+/* Tambahkan CSS untuk tombol export/import */
+.setting-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.export-settings {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.import-settings {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
     </style>
 </head>
 <body>
@@ -1235,15 +1250,28 @@ input:checked + .toggle-label:before {
             </div>
             <button type="button" class="btn btn-success flip-btn" id="flipBtn">🔄 Balik Kartu</button>
 
-            <!-- Action Section -->
-            <div class="action-section">
-                <div class="section-title"><span>⚡</span> Aksi Cepat</div>
-                <div class="action-grid">
-                    <button class="action-btn download-front" data-side="front">⬇️ Depan</button>
-                    <button class="action-btn download-back" data-side="back">⬇️ Belakang</button>
-                    <button class="action-btn download-both" data-side="both">⬇️ Kedua Sisi</button>
-                </div>
-            </div>
+<!-- Action Section -->
+<div class="action-section">
+    <div class="section-title"><span>⚡</span> Aksi Cepat</div>
+    <div class="action-grid">
+        <button class="action-btn download-front" data-side="front">⬇️ Depan</button>
+        <button class="action-btn download-back" data-side="back">⬇️ Belakang</button>
+        <button class="action-btn download-both" data-side="both">⬇️ Kedua Sisi</button>
+    </div>
+    
+    <!-- Tambahkan tombol export/import setting -->
+    <div class="setting-actions" style="margin-top: 15px;">
+        <button class="action-btn export-settings" id="exportSettingsBtn">
+            💾 Export Setting
+        </button>
+        <button class="action-btn import-settings" id="importSettingsBtn">
+            📂 Import Setting
+        </button>
+        <input type="file" id="importSettingsInput" accept=".json" style="display: none;">
+    </div>
+</div>
+
+    
         </div>
     </div>
 
@@ -1383,6 +1411,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 addElementBtn: document.getElementById('addElementBtn'),
                 // Toggle untuk jabatan
                 showPositionToggle: document.getElementById('showPositionToggle'),
+                // Export/Import Elements
+                exportSettingsBtn: document.getElementById('exportSettingsBtn'),
+                importSettingsBtn: document.getElementById('importSettingsBtn'),
+                importSettingsInput: document.getElementById('importSettingsInput'),
                 // Inputs
                 form: document.getElementById('controlForm'),
                 logoInput: document.getElementById('logoInput'),
@@ -1470,6 +1502,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     this.updateCard();
                 });
             }
+
+            // Export/Import settings
+            this.elements.exportSettingsBtn.addEventListener('click', () => this.exportSettings());
+            
+            this.elements.importSettingsBtn.addEventListener('click', () => {
+                this.elements.importSettingsInput.click();
+            });
+            
+            this.elements.importSettingsInput.addEventListener('change', (e) => this.importSettings(e));
 
             // Buttons
             this.elements.updateBtn.addEventListener('click', () => this.updateCard());
@@ -2007,60 +2048,39 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         updateCard() {
-    const data = this.getFormData();
-    
-    // Update Template Classes
-    this.elements.cardFront.className = `card-face card-front card-front-${this.state.template}`;
-    this.elements.cardBack.className = `card-face card-back`;
-    
-    // Update Backgrounds
-    if (this.state.frontBackground.type === 'image') {
-        this.elements.cardFront.style.backgroundImage = `url(${this.state.frontBackground.value})`;
-        this.elements.cardFront.style.backgroundSize = 'cover';
-        this.elements.cardFront.style.backgroundPosition = 'center';
-    } else {
-        this.elements.cardFront.style.backgroundImage = 'none';
-        if (this.state.template === 'plain') {
-            this.elements.cardFront.style.backgroundColor = this.state.frontBackground.value;
-        } else {
-            this.elements.cardFront.style.background = 'var(--light-gradient)';
-        }
-    }
+            const data = this.getFormData();
+            
+            // Update Template Classes
+            this.elements.cardFront.className = `card-face card-front card-front-${this.state.template}`;
+            this.elements.cardBack.className = `card-face card-back`;
+            
+            // Update Backgrounds
+            if (this.state.frontBackground.type === 'image') {
+                this.elements.cardFront.style.backgroundImage = `url(${this.state.frontBackground.value})`;
+                this.elements.cardFront.style.backgroundSize = 'cover';
+                this.elements.cardFront.style.backgroundPosition = 'center';
+            } else {
+                this.elements.cardFront.style.backgroundImage = 'none';
+                if (this.state.template === 'plain') {
+                    this.elements.cardFront.style.backgroundColor = this.state.frontBackground.value;
+                } else {
+                    this.elements.cardFront.style.background = 'var(--light-gradient)';
+                }
+            }
 
-    if (this.state.backBackground.type === 'image') {
-        this.elements.cardBack.style.backgroundImage = `url(${this.state.backBackground.value})`;
-        this.elements.cardBack.style.backgroundSize = 'cover';
-        this.elements.cardBack.style.backgroundPosition = 'center';
-    } else {
-        this.elements.cardBack.style.backgroundImage = 'none';
-        this.elements.cardBack.style.backgroundColor = this.state.backBackground.value;
-    }
-    
-    // Show/hide decorative elements based on template (hanya untuk depan)
-    if (this.state.template === 'plain') {
-        this.elements.greenSideLeft.style.display = 'none';
-        this.elements.greenSideRight.style.display = 'none';
-        this.elements.decorativeCirclesFront.style.display = 'none';
-        this.elements.decorativeCirclesBack.style.display = 'none';
-    } else {
-        this.applyDecorativeStyles();
-        this.elements.greenSideLeft.style.display = 'flex';
-        this.elements.greenSideRight.style.display = 'flex';
-        this.elements.decorativeCirclesFront.style.display = 'block';
-        // Pastikan dekoratif belakang tidak ditampilkan
-        this.elements.decorativeCirclesBack.style.display = 'none';
-    }
+            if (this.state.backBackground.type === 'image') {
+                this.elements.cardBack.style.backgroundImage = `url(${this.state.backBackground.value})`;
+                this.elements.cardBack.style.backgroundSize = 'cover';
+                this.elements.cardBack.style.backgroundPosition = 'center';
+            } else {
+                this.elements.cardBack.style.backgroundImage = 'none';
+                this.elements.cardBack.style.backgroundColor = this.state.backBackground.value;
+            }
             
-            // Show/hide decorative elements based on template
-            const decorativeElements = [
-                this.elements.greenSideLeft,
-                this.elements.greenSideRight
-            ];
-            
+            // Show/hide decorative elements based on template (hanya untuk depan)
             if (this.state.template === 'plain') {
-                decorativeElements.forEach(el => {
-                    if (el) el.style.display = 'none';
-                });
+                this.elements.greenSideLeft.style.display = 'none';
+                this.elements.greenSideRight.style.display = 'none';
                 this.elements.decorativeCirclesFront.style.display = 'none';
                 this.elements.decorativeCirclesBack.style.display = 'none';
             } else {
@@ -2068,7 +2088,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.elements.greenSideLeft.style.display = 'flex';
                 this.elements.greenSideRight.style.display = 'flex';
                 this.elements.decorativeCirclesFront.style.display = 'block';
-                this.elements.decorativeCirclesBack.style.display = 'block';
+                // Pastikan dekoratif belakang tidak ditampilkan
+                this.elements.decorativeCirclesBack.style.display = 'none';
             }
             
             // Update Front Card
@@ -2285,6 +2306,365 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // ============================================
+        // EXPORT/IMPORT SETTINGS
+        // ============================================
+        exportSettings() {
+    try {
+        // Validasi elemen yang diperlukan
+        const companyInput = document.getElementById('companyInput');
+        const nameInput = document.getElementById('nameInput');
+        const nipInput = document.getElementById('nipInput');
+        // const positionInput = const positionInput = document.getElementById('positionInput');
+        const emailInput = document.getElementById('emailInput');
+        const phoneInput = document.getElementById('phoneInput');
+        const officeInput = document.getElementById('officeInput');
+        const headerColorInput = document.getElementById('headerColorInput');
+        const sideBarColorInput = document.getElementById('sideBarColorInput');
+        
+        // Validasi minimal
+        if (!companyInput || !nameInput) {
+            throw new Error('Nama perusahaan dan nama harus diisi!');
+        }
+        
+        const settings = {
+            // Basic Info
+            company: companyInput.value,
+            name: nameInput.value,
+            nip: nipInput.value,
+            position: positionInput.value,
+            email: emailInput.value,
+            phone: phoneInput.value,
+            office: officeInput.value,
+            
+            // Template & Design
+            template: this.state.template,
+            showPosition: this.state.showPosition,
+            headerColor: headerColorInput.value,
+            sideBarColor: sideBarColorInput.value,
+            
+            // Background Settings
+            frontBackground: this.state.frontBackground,
+            backBackground: this.state.backBackground,
+            
+            // Font Settings
+            fonts: this.state.fonts,
+            fontSizes: this.state.fontSizes,
+            
+            // Decorative Elements
+            decorativeElements: this.state.decorativeElements,
+            
+            // Images (base64)
+            logoUrl: this.state.logoUrl,
+            photoUrl: this.state.photoUrl,
+            
+            // Metadata
+            exportDate: new Date().toISOString(),
+            version: '1.0'
+        };
+        
+        // Konversi ke JSON string
+        const settingsJson = JSON.stringify(settings, null, 2);
+        
+        // Buat blob dan download
+        const blob = new Blob([settingsJson], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        
+        // Generate nama file yang lebih aman
+        const fileName = this._generateFileName('front');
+        a.download = `kartu_setting_${fileName.replace('.png', '')}.json`;
+        
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        URL.revokeObjectURL(url);
+        
+        this.showNotification('✅ Setting berhasil diexport!');
+        
+    } catch (error) {
+        console.error('Export error:', error);
+        this.showNotification('❌ Gagal export setting: ' + error.message, 'error');
+    }
+}
+
+        importSettings(event) {
+    const file = event.target.files[0];
+    
+    if (!file) return;
+    
+    if (!file.name.endsWith('.json')) {
+        this.showNotification('❌ Harap pilih file JSON yang valid!', 'error');
+        event.target.value = '';
+        return;
+    }
+    
+    // Validasi ukuran file (maks 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        this.showNotification('❌ Ukuran file maksimal 5MB!', 'error');
+        event.target.value = '';
+        return;
+    }
+    
+    const reader = new FileReader();
+    
+    reader.onload = (e) => {
+        try {
+            const settings = JSON.parse(e.target.result);
+            
+            // Validasi minimal
+            if (!settings.version) {
+                throw new Error('File setting tidak valid atau korup');
+            }
+            
+            // Validasi versi
+            if (settings.version !== '1.0') {
+                throw new Error('Versi file tidak kompatibel');
+            }
+            
+            // Validasi field wajib
+            if (!settings.name || !settings.company) {
+                throw new Error('File setting tidak lengkap (nama dan perusahaan harus ada)');
+            }
+            
+            // Terapkan setting
+            this.applySettings(settings);
+            
+            this.showNotification('✅ Setting berhasil diimport!');
+            
+        } catch (error) {
+            console.error('Import error:', error);
+            this.showNotification('❌ Gagal import setting: ' + error.message, 'error');
+        }
+        
+        event.target.value = '';
+    };
+    
+    reader.onerror = () => {
+        this.showNotification('❌ Gagal membaca file', 'error');
+        event.target.value = '';
+    };
+    
+    reader.readAsText(file);
+}
+
+        applySettings(settings) {
+    // Tampilkan loading
+    this.showLoading('Menerapkan setting...', false);
+    
+    try {
+        // Validasi minimal
+        if (!settings.name || !settings.company) {
+            throw new Error('Data setting tidak lengkap');
+        }
+        
+        // Apply Basic Info
+        if (settings.company) {
+            const companyInput = document.getElementById('companyInput');
+            if (companyInput) companyInput.value = settings.company;
+        }
+        
+        if (settings.name) {
+            const nameInput = document.getElementById('nameInput');
+            if (nameInput) nameInput.value = settings.name;
+        }
+        
+        if (settings.nip) {
+            const nipInput = document.getElementById('nipInput');
+            if (nipInput) nipInput.value = settings.nip;
+        }
+        
+        if (settings.position) {
+            const positionInput = document.getElementById('positionInput');
+            if (positionInput) positionInput.value = settings.position;
+        }
+        
+        if (settings.email) {
+            const emailInput = document.getElementById('emailInput');
+            if (emailInput) emailInput.value = settings.email;
+        }
+        
+        if (settings.phone) {
+            const phoneInput = document.getElementById('phoneInput');
+            if (phoneInput) phoneInput.value = settings.phone;
+        }
+        
+        if (settings.office) {
+            const officeInput = document.getElementById('officeInput');
+            if (officeInput) officeInput.value = settings.office;
+        }
+        
+        // Apply Template & Design
+        if (settings.template) {
+            this.state.template = settings.template;
+            const templateRadio = document.querySelector(`input[name="cardTemplate"][value="${settings.template}"]`);
+            if (templateRadio) {
+                templateRadio.checked = true;
+                this.updateTemplateSelection(settings.template);
+            }
+            
+            // Show/hide decorative section
+            if (settings.template === 'decorative') {
+                if (this.elements.decorativeSection) {
+                    this.elements.decorativeSection.style.display = 'block';
+                }
+            } else {
+                if (this.elements.decorativeSection) {
+                    this.elements.decorativeSection.style.display = 'none';
+                }
+            }
+        }
+        
+        if (settings.showPosition !== undefined) {
+            this.state.showPosition = settings.showPosition;
+            const showPositionToggle = document.getElementById('showPositionToggle');
+            if (showPositionToggle) {
+                showPositionToggle.checked = settings.showPosition;
+            }
+        }
+        
+        if (settings.headerColor) {
+            const headerColorInput = document.getElementById('headerColorInput');
+            if (headerColorInput) headerColorInput.value = settings.headerColor;
+        }
+        
+        if (settings.sideBarColor) {
+            this.state.sideBarColor = settings.sideBarColor;
+            const sideBarColorInput = document.getElementById('sideBarColorInput');
+            if (sideBarColorInput) sideBarColorInput.value = settings.sideBarColor;
+        }
+        
+        // Apply Background Settings
+        if (settings.frontBackground) {
+            this.state.frontBackground = settings.frontBackground;
+            const frontBgColorRadio = document.querySelector('input[name="frontBgType"][value="color"]');
+            const frontBgImageRadio = document.querySelector('input[name="frontBgType"][value="image"]');
+            
+            if (settings.frontBackground.type === 'color' && frontBgColorRadio) {
+                frontBgColorRadio.checked = true;
+                if (this.elements.frontBgColorInput) {
+                    this.elements.frontBgColorInput.value = settings.frontBackground.value;
+                }
+            } else if (settings.frontBackground.type === 'image' && frontBgImageRadio) {
+                frontBgImageRadio.checked = true;
+            }
+            this.toggleBackgroundOption('front');
+        }
+        
+        if (settings.backBackground) {
+            this.state.backBackground = settings.backBackground;
+            const backBgColorRadio = document.querySelector('input[name="backBgType"][value="color"]');
+            const backBgImageRadio = document.querySelector('input[name="backBgType"][value="image"]');
+            
+            if (settings.backBackground.type === 'color' && backBgColorRadio) {
+                backBgColorRadio.checked = true;
+                if (this.elements.backBgColorInput) {
+                    this.elements.backBgColorInput.value = settings.backBackground.value;
+                }
+            } else if (settings.backBackground.type === 'image' && backBgImageRadio) {
+                backBgImageRadio.checked = true;
+            }
+            this.toggleBackgroundOption('back');
+        }
+        
+        // Apply Font Settings
+        if (settings.fonts) {
+            this.state.fonts = settings.fonts;
+            
+            // Update font selectors
+            if (settings.fonts.company) {
+                const companyFontSelect = document.getElementById('companyFontSelect');
+                if (companyFontSelect) {
+                    companyFontSelect.value = settings.fonts.company;
+                    this.applyFontToCard('company', settings.fonts.company);
+                }
+            }
+            if (settings.fonts.name) {
+                const nameFontSelect = document.getElementById('nameFontSelect');
+                if (nameFontSelect) {
+                    nameFontSelect.value = settings.fonts.name;
+                    this.applyFontToCard('name', settings.fonts.name);
+                }
+            }
+            if (settings.fonts.other) {
+                const otherFontSelect = document.getElementById('otherFontSelect');
+                if (otherFontSelect) {
+                    otherFontSelect.value = settings.fonts.other;
+                    this.applyFontToCard('other', settings.fonts.other);
+                }
+            }
+        }
+        
+        if (settings.fontSizes) {
+            this.state.fontSizes = settings.fontSizes;
+            
+            // Update font size sliders
+            if (settings.fontSizes.company) {
+                const companyFontSizeInput = document.getElementById('companyFontSizeInput');
+                if (companyFontSizeInput) {
+                    companyFontSizeInput.value = settings.fontSizes.company;
+                    this.elements.companyFontSizeValue.textContent = `${settings.fontSizes.company}px`;
+                    this.applyFontSizeToCard('company', settings.fontSizes.company);
+                }
+            }
+            if (settings.fontSizes.name) {
+                const nameFontSizeInput = document.getElementById('nameFontSizeInput');
+                if (nameFontSizeInput) {
+                    nameFontSizeInput.value = settings.fontSizes.name;
+                    this.elements.nameFontSizeValue.textContent = `${settings.fontSizes.name}px`;
+                    this.applyFontSizeToCard('name', settings.fontSizes.name);
+                }
+            }
+            if (settings.fontSizes.other) {
+                const otherFontSizeInput = document.getElementById('otherFontSizeInput');
+                if (otherFontSizeInput) {
+                    otherFontSizeInput.value = settings.fontSizes.other;
+                    this.elements.otherFontSizeValue.textContent = `${settings.fontSizes.other}px`;
+                    this.applyFontSizeToCard('other', settings.fontSizes.other);
+                }
+            }
+        }
+        
+        // Apply Decorative Elements
+        if (settings.decorativeElements && settings.decorativeElements.front) {
+            this.state.decorativeElements = settings.decorativeElements;
+            
+            // Update nextId
+            const maxId = Math.max(...settings.decorativeElements.front.map(el => el.id));
+            this.state.nextId = maxId + 1;
+            
+            // Re-render elements controls
+            this.renderElementsControls();
+        }
+        
+        // Apply images if available (base64)
+        if (settings.logoUrl) {
+            this.state.logoUrl = settings.logoUrl;
+            this.displayLogo(settings.logoUrl);
+        }
+        
+        if (settings.photoUrl) {
+            this.state.photoUrl = settings.photoUrl;
+            this.displayPhoto(settings.photoUrl);
+        }
+        
+        // Update card dengan semua setting baru
+        this.updateCard();
+        
+        setTimeout(() => {
+            this.hideLoading();
+        }, 500);
+        
+    } catch (error) {
+        console.error('Apply settings error:', error);
+        this.hideLoading();
+        this.showNotification('❌ Gagal menerapkan setting: ' + error.message, 'error');
+    }
+}
+
+        // ============================================
         // DOWNLOAD & CANVAS LOGIC
         // ============================================
         async downloadCard(side) {
@@ -2484,38 +2864,38 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         _fixClonedCard(clone, side) {
-    // Reset transform dan properti dasar
-    clone.style.cssText = `
-        transform: none;
-        backface-visibility: visible;
-        position: relative;
-        width: 400px;
-        height: 600px;
-        overflow: hidden;
-        margin: 0;
-        box-sizing: border-box;
-        display: flex;
-        flex-direction: column;
-        border-radius: 20px;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-    `;
-    
-    // Terapkan background
-    this._applyBackgroundToClone(clone, side);
-    
-    // Perbaiki semua elemen
-    if (side === 'front') {
-        this._fixFrontCardElements(clone);
-        // Hanya tambahkan dekoratif untuk bagian depan
-        if (this.state.template === 'decorative') {
-            this._fixDecorativeElementsForDownload(clone);
-            this._fixGreenSideBarsForDownload(clone);
+            // Reset transform dan properti dasar
+            clone.style.cssText = `
+                transform: none;
+                backface-visibility: visible;
+                position: relative;
+                width: 400px;
+                height: 600px;
+                overflow: hidden;
+                margin: 0;
+                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+                border-radius: 20px;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            `;
+            
+            // Terapkan background
+            this._applyBackgroundToClone(clone, side);
+            
+            // Perbaiki semua elemen
+            if (side === 'front') {
+                this._fixFrontCardElements(clone);
+                // Hanya tambahkan dekoratif untuk bagian depan
+                if (this.state.template === 'decorative') {
+                    this._fixDecorativeElementsForDownload(clone);
+                    this._fixGreenSideBarsForDownload(clone);
+                }
+            } else {
+                this._fixBackCardElements(clone);
+                // JANGAN tambahkan dekoratif untuk bagian belakang
+            }
         }
-    } else {
-        this._fixBackCardElements(clone);
-        // JANGAN tambahkan dekoratif untuk bagian belakang
-    }
-}
 
         _applyBackgroundToClone(clone, side) {
             if (side === 'front') {
@@ -2712,164 +3092,164 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         _fixBackCardElements(clone) {
-    // Hapus container dekoratif jika ada
-    const decorativeContainer = clone.querySelector('.decorative-circles');
-    if (decorativeContainer) {
-        decorativeContainer.remove();
-    }
-    
-    // Hapus green side bars jika ada
-    const greenSideLeft = clone.querySelector('.green-side-left');
-    const greenSideRight = clone.querySelector('.green-side-right');
-    if (greenSideLeft) greenSideLeft.remove();
-    if (greenSideRight) greenSideRight.remove();
-    
-    // Back title
-    const backTitle = clone.querySelector('.back-title');
-    if (backTitle) {
-        backTitle.style.cssText = `
-            font-size: ${this.state.fontSizes.company}px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            text-align: center;
-            margin-bottom: 20px;
-            flex-shrink: 0;
-            color: white;
-            font-family: ${this.state.fonts.company};
-        `;
-    }
-    
-    // Back info
-    const backInfo = clone.querySelector('.back-info');
-    if (backInfo) {
-        backInfo.style.cssText = `
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 20px;
-            overflow-y: auto;
-            min-height: 0;
-        `;
-    }
-    
-    // Update info items dengan data terbaru
-    const backNameDisplay = clone.querySelector('#backNameDisplay');
-    if (backNameDisplay) {
-        backNameDisplay.textContent = document.getElementById('nameInput').value;
-        backNameDisplay.style.cssText = `
-            font-size: ${this.state.fontSizes.name}px;
-            color: white;
-            font-family: ${this.state.fonts.name};
-        `;
-    }
-    
-    const backNipDisplay = clone.querySelector('#backNipDisplay');
-    if (backNipDisplay) {
-        const nipValue = document.getElementById('nipInput').value;
-        backNipDisplay.textContent = nipValue ? `NIP ${nipValue}` : '';
-        backNipDisplay.style.display = nipValue ? 'block' : 'none';
-        backNipDisplay.style.cssText = `
-            font-size: ${this.state.fontSizes.other}px;
-            color: white;
-            font-family: ${this.state.fonts.other};
-        `;
-    }
-    
-    const backEmailDisplay = clone.querySelector('#backEmailDisplay');
-    if (backEmailDisplay) {
-        backEmailDisplay.textContent = document.getElementById('emailInput').value;
-        backEmailDisplay.style.cssText = `
-            font-size: ${this.state.fontSizes.other}px;
-            color: white;
-            font-family: ${this.state.fonts.other};
-        `;
-    }
-    
-    const backPhoneDisplay = clone.querySelector('#backPhoneDisplay');
-    if (backPhoneDisplay) {
-        backPhoneDisplay.textContent = document.getElementById('phoneInput').value.replace(/-/g, ' - ');
-        backPhoneDisplay.style.cssText = `
-            font-size: ${this.state.fontSizes.other}px;
-            color: white;
-            font-family: ${this.state.fonts.other};
-        `;
-    }
-    
-    const backPositionDisplay = clone.querySelector('#backPositionDisplay');
-    if (backPositionDisplay) {
-        backPositionDisplay.textContent = document.getElementById('positionInput').value;
-        backPositionDisplay.style.cssText = `
-            font-size: ${this.state.fontSizes.other}px;
-            color: white;
-            font-family: ${this.state.fonts.other};
-        `;
-    }
-    
-    const backOfficeDisplay = clone.querySelector('#backOfficeDisplay');
-    if (backOfficeDisplay) {
-        backOfficeDisplay.textContent = document.getElementById('officeInput').value;
-        backOfficeDisplay.style.cssText = `
-            font-size: ${this.state.fontSizes.other}px;
-            color: white;
-            font-family: ${this.state.fonts.other};
-        `;
-    }
-    
-    // QR container
-    const qrContainer = clone.querySelector('.qr-container');
-    if (qrContainer) {
-        qrContainer.style.cssText = `
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-top: auto;
-            flex-shrink: 0;
-        `;
-    }
-    
-    // QR code - regenerate untuk memastikan data terbaru
-    const qrCode = clone.querySelector('.qr-code');
-    if (qrCode) {
-        qrCode.style.cssText = `
-            width: 180px;
-            height: 180px;
-            background: white;
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-            padding: 15px;
-            position: relative;
-        `;
-        
-        // Clear dan regenerate QR code
-        qrCode.innerHTML = '';
-        const data = this.getFormData();
-        const vcardData = `BEGIN:VCARD\nVERSION:3.0\nFN:${data.name}\nN:;${data.name};;;\nORG:${data.company}\nTITLE:${data.position}\nTEL:${data.phone}\nEMAIL:${data.email}\nADR:;;${data.office};;;;\nEND:VCARD`;
-        
-        new QRCode(qrCode, {
-            text: vcardData,
-            width: 170,
-            height: 170,
-            colorDark: "#000000",
-            colorLight: "#ffffff",
-            correctLevel: QRCode.CorrectLevel.H
-        });
-        
-        const qrCanvas = qrCode.querySelector('canvas');
-        if (qrCanvas) {
-            qrCanvas.style.cssText = `
-                display: block;
-                width: 100% !important;
-                height: 100% !important;
-            `;
+            // Hapus container dekoratif jika ada
+            const decorativeContainer = clone.querySelector('.decorative-circles');
+            if (decorativeContainer) {
+                decorativeContainer.remove();
+            }
+            
+            // Hapus green side bars jika ada
+            const greenSideLeft = clone.querySelector('.green-side-left');
+            const greenSideRight = clone.querySelector('.green-side-right');
+            if (greenSideLeft) greenSideLeft.remove();
+            if (greenSideRight) greenSideRight.remove();
+            
+            // Back title
+            const backTitle = clone.querySelector('.back-title');
+            if (backTitle) {
+                backTitle.style.cssText = `
+                    font-size: ${this.state.fontSizes.company}px;
+                    font-weight: bold;
+                    text-transform: uppercase;
+                    letter-spacing: 2px;
+                    text-align: center;
+                    margin-bottom: 20px;
+                    flex-shrink: 0;
+                    color: white;
+                    font-family: ${this.state.fonts.company};
+                `;
+            }
+            
+            // Back info
+            const backInfo = clone.querySelector('.back-info');
+            if (backInfo) {
+                backInfo.style.cssText = `
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    gap: 15px;
+                    margin-bottom: 20px;
+                    overflow-y: auto;
+                    min-height: 0;
+                `;
+            }
+            
+            // Update info items dengan data terbaru
+            const backNameDisplay = clone.querySelector('#backNameDisplay');
+            if (backNameDisplay) {
+                backNameDisplay.textContent = document.getElementById('nameInput').value;
+                backNameDisplay.style.cssText = `
+                    font-size: ${this.state.fontSizes.name}px;
+                    color: white;
+                    font-family: ${this.state.fonts.name};
+                `;
+            }
+            
+            const backNipDisplay = clone.querySelector('#backNipDisplay');
+            if (backNipDisplay) {
+                const nipValue = document.getElementById('nipInput').value;
+                backNipDisplay.textContent = nipValue ? `NIP ${nipValue}` : '';
+                backNipDisplay.style.display = nipValue ? 'block' : 'none';
+                backNipDisplay.style.cssText = `
+                    font-size: ${this.state.fontSizes.other}px;
+                    color: white;
+                    font-family: ${this.state.fonts.other};
+                `;
+            }
+            
+            const backEmailDisplay = clone.querySelector('#backEmailDisplay');
+            if (backEmailDisplay) {
+                backEmailDisplay.textContent = document.getElementById('emailInput').value;
+                backEmailDisplay.style.cssText = `
+                    font-size: ${this.state.fontSizes.other}px;
+                    color: white;
+                    font-family: ${this.state.fonts.other};
+                `;
+            }
+            
+            const backPhoneDisplay = clone.querySelector('#backPhoneDisplay');
+            if (backPhoneDisplay) {
+                backPhoneDisplay.textContent = document.getElementById('phoneInput').value.replace(/-/g, ' - ');
+                backPhoneDisplay.style.cssText = `
+                    font-size: ${this.state.fontSizes.other}px;
+                    color: white;
+                    font-family: ${this.state.fonts.other};
+                `;
+            }
+            
+            const backPositionDisplay = clone.querySelector('#backPositionDisplay');
+            if (backPositionDisplay) {
+                backPositionDisplay.textContent = document.getElementById('positionInput').value;
+                backPositionDisplay.style.cssText = `
+                    font-size: ${this.state.fontSizes.other}px;
+                    color: white;
+                    font-family: ${this.state.fonts.other};
+                `;
+            }
+            
+            const backOfficeDisplay = clone.querySelector('#backOfficeDisplay');
+            if (backOfficeDisplay) {
+                backOfficeDisplay.textContent = document.getElementById('officeInput').value;
+                backOfficeDisplay.style.cssText = `
+                    font-size: ${this.state.fontSizes.other}px;
+                    color: white;
+                    font-family: ${this.state.fonts.other};
+                `;
+            }
+            
+            // QR container
+            const qrContainer = clone.querySelector('.qr-container');
+            if (qrContainer) {
+                qrContainer.style.cssText = `
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    margin-top: auto;
+                    flex-shrink: 0;
+                `;
+            }
+            
+            // QR code - regenerate untuk memastikan data terbaru
+            const qrCode = clone.querySelector('.qr-code');
+            if (qrCode) {
+                qrCode.style.cssText = `
+                    width: 180px;
+                    height: 180px;
+                    background: white;
+                    border-radius: 15px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+                    padding: 15px;
+                    position: relative;
+                `;
+                
+                // Clear dan regenerate QR code
+                qrCode.innerHTML = '';
+                const data = this.getFormData();
+                const vcardData = `BEGIN:VCARD\nVERSION:3.0\nFN:${data.name}\nN:;${data.name};;;\nORG:${data.company}\nTITLE:${data.position}\nTEL:${data.phone}\nEMAIL:${data.email}\nADR:;;${data.office};;;;\nEND:VCARD`;
+                
+                new QRCode(qrCode, {
+                    text: vcardData,
+                    width: 170,
+                    height: 170,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+                
+                const qrCanvas = qrCode.querySelector('canvas');
+                if (qrCanvas) {
+                    qrCanvas.style.cssText = `
+                        display: block;
+                        width: 100% !important;
+                        height: 100% !important;
+                    `;
+                }
+            }
         }
-    }
-}
 
         _fixGreenSideBarsForDownload(clone) {
             const greenSideLeft = clone.querySelector('.green-side-left');
@@ -2977,180 +3357,180 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         _fixAllElementsForDownload(clone) {
-    // Cek apakah ini kartu belakang
-    const isBackCard = clone.classList.contains('card-back');
-    
-    // Jika kartu belakang, hapus semua elemen dekoratif
-    if (isBackCard) {
-        const decorativeContainer = clone.querySelector('.decorative-circles');
-        if (decorativeContainer) {
-            decorativeContainer.remove();
-        }
-        
-        const greenSideLeft = clone.querySelector('.green-side-left');
-        const greenSideRight = clone.querySelector('.green-side-right');
-        if (greenSideLeft) greenSideLeft.remove();
-        if (greenSideRight) greenSideRight.remove();
-    }
-    
-    // Header
-    const header = clone.querySelector('.card-header');
-    if (header) {
-        header.style.cssText = `
-            flex-shrink: 0;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            position: relative;
-            z-index: 2;
-        `;
-    }
-    
-    // Logo container
-    const logoContainer = clone.querySelector('.logo-container');
-    if (logoContainer) {
-        logoContainer.style.cssText = `
-            width: 60px;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 10px;
-            overflow: hidden;
-            background: rgba(255,255,255,0.9);
-            border: 2px solid rgba(255,255,255,0.5);
-        `;
-    }
-    
-    // Logo image
-    const logoImage = clone.querySelector('.logo-image');
-    if (logoImage && this.state.logoUrl) {
-        logoImage.src = this.state.logoUrl;
-        logoImage.style.cssText = `
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            display: block;
-        `;
-    }
-    
-    // Company name
-    const companyName = clone.querySelector('.company-name');
-    if (companyName) {
-        companyName.textContent = document.getElementById('companyInput').value;
-        companyName.style.cssText = `
-            font-size: ${this.state.fontSizes.company}px;
-            font-weight: bold;
-            color: ${this.state.template === 'plain' ? 'white' : '#333'};
-            font-family: ${this.state.fonts.company};
-            text-shadow: ${this.state.template === 'plain' ? '2px 2px 8px rgba(0,0,0,0.7)' : 'none'};
-        `;
-    }
-    
-    // Card image container
-    const cardImageContainer = clone.querySelector('.card-image-container');
-    if (cardImageContainer) {
-        cardImageContainer.style.cssText = `
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 10px;
-            position: relative;
-            min-height: 0;
-            z-index: 1;
-        `;
-    }
-    
-    // Person image
-    const personImage = clone.querySelector('.person-image');
-    if (personImage) {
-        personImage.style.cssText = `
-            width: 300px;
-            height: 350px;
-            max-width: 100%;
-            max-height: 100%;
-            flex-shrink: 0;
-            border-radius: 15px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-            overflow: hidden;
-            position: relative;
-        `;
-        
-        const personImg = personImage.querySelector('img');
-        if (personImg) {
-            if (this.state.photoUrl) {
-                personImg.src = this.state.photoUrl;
+            // Cek apakah ini kartu belakang
+            const isBackCard = clone.classList.contains('card-back');
+            
+            // Jika kartu belakang, hapus semua elemen dekoratif
+            if (isBackCard) {
+                const decorativeContainer = clone.querySelector('.decorative-circles');
+                if (decorativeContainer) {
+                    decorativeContainer.remove();
+                }
+                
+                const greenSideLeft = clone.querySelector('.green-side-left');
+                const greenSideRight = clone.querySelector('.green-side-right');
+                if (greenSideLeft) greenSideLeft.remove();
+                if (greenSideRight) greenSideRight.remove();
             }
-            personImg.style.cssText = `
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                display: block;
-            `;
+            
+            // Header
+            const header = clone.querySelector('.card-header');
+            if (header) {
+                header.style.cssText = `
+                    flex-shrink: 0;
+                    padding: 15px;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 10px;
+                    position: relative;
+                    z-index: 2;
+                `;
+            }
+            
+            // Logo container
+            const logoContainer = clone.querySelector('.logo-container');
+            if (logoContainer) {
+                logoContainer.style.cssText = `
+                    width: 60px;
+                    height: 60px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 10px;
+                    overflow: hidden;
+                    background: rgba(255,255,255,0.9);
+                    border: 2px solid rgba(255,255,255,0.5);
+                `;
+            }
+            
+            // Logo image
+            const logoImage = clone.querySelector('.logo-image');
+            if (logoImage && this.state.logoUrl) {
+                logoImage.src = this.state.logoUrl;
+                logoImage.style.cssText = `
+                    max-width: 100%;
+                    max-height: 100%;
+                    object-fit: contain;
+                    display: block;
+                `;
+            }
+            
+            // Company name
+            const companyName = clone.querySelector('.company-name');
+            if (companyName) {
+                companyName.textContent = document.getElementById('companyInput').value;
+                companyName.style.cssText = `
+                    font-size: ${this.state.fontSizes.company}px;
+                    font-weight: bold;
+                    color: ${this.state.template === 'plain' ? 'white' : '#333'};
+                    font-family: ${this.state.fonts.company};
+                    text-shadow: ${this.state.template === 'plain' ? '2px 2px 8px rgba(0,0,0,0.7)' : 'none'};
+                `;
+            }
+            
+            // Card image container
+            const cardImageContainer = clone.querySelector('.card-image-container');
+            if (cardImageContainer) {
+                cardImageContainer.style.cssText = `
+                    flex: 1;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    padding: 10px;
+                    position: relative;
+                    min-height: 0;
+                    z-index: 1;
+                `;
+            }
+            
+            // Person image
+            const personImage = clone.querySelector('.person-image');
+            if (personImage) {
+                personImage.style.cssText = `
+                    width: 300px;
+                    height: 350px;
+                    max-width: 100%;
+                    max-height: 100%;
+                    flex-shrink: 0;
+                    border-radius: 15px;
+                    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+                    overflow: hidden;
+                    position: relative;
+                `;
+                
+                const personImg = personImage.querySelector('img');
+                if (personImg) {
+                    if (this.state.photoUrl) {
+                        personImg.src = this.state.photoUrl;
+                    }
+                    personImg.style.cssText = `
+                        width: 100%;
+                        height: 100%;
+                        object-fit: cover;
+                        display: block;
+                    `;
+                }
+            }
+            
+            // Footer
+            const footer = clone.querySelector('.card-footer');
+            if (footer) {
+                footer.style.cssText = `
+                    flex-shrink: 0;
+                    padding: 15px;
+                    text-align: center;
+                    position: relative;
+                    z-index: 2;
+                    ${this.state.template === 'decorative' ? 
+                        `background: linear-gradient(135deg, ${document.getElementById('headerColorInput').value} 0%, ${this.adjustColor(document.getElementById('headerColorInput').value, 20)} 100%);` : 
+                        'background: transparent;'}
+                `;
+            }
+            
+            // Name text
+            const nameText = clone.querySelector('.name-text');
+            if (nameText) {
+                nameText.textContent = document.getElementById('nameInput').value;
+                nameText.style.cssText = `
+                    font-size: ${this.state.fontSizes.name}px;
+                    font-weight: bold;
+                    color: ${this.state.template === 'plain' ? 'white' : '#333'};
+                    font-family: ${this.state.fonts.name};
+                    text-shadow: ${this.state.template === 'plain' ? '2px 2px 8px rgba(0,0,0,0.7)' : '2px 2px 4px rgba(0,0,0,0.2)'};
+                `;
+            }
+            
+            // NIP text
+            const nipText = clone.querySelector('.nip-text');
+            if (nipText) {
+                const nipValue = document.getElementById('nipInput').value;
+                if (nipValue) {
+                    nipText.textContent = `NIP: ${nipValue}`;
+                    nipText.style.display = 'block';
+                } else {
+                    nipText.style.display = 'none';
+                }
+                nipText.style.cssText = `
+                    font-size: ${this.state.fontSizes.other}px;
+                    margin-top: 5px;
+                    color: ${this.state.template === 'plain' ? 'white' : '#333'};
+                    font-family: ${this.state.fonts.other};
+                    text-shadow: ${this.state.template === 'plain' ? '2px 2px 8px rgba(0,0,0,0.7)' : '1px 1px 2px rgba(0,0,0,0.2)'};
+                `;
+            }
+            
+            // Green side bars dan dekoratif hanya untuk kartu depan
+            if (!isBackCard && this.state.template === 'decorative') {
+                this._fixGreenSideBarsForDownload(clone);
+                this._fixDecorativeElementsForDownload(clone);
+            }
+            
+            // Back card specific elements
+            if (isBackCard) {
+                this._fixBackCardElements(clone);
+            }
         }
-    }
-    
-    // Footer
-    const footer = clone.querySelector('.card-footer');
-    if (footer) {
-        footer.style.cssText = `
-            flex-shrink: 0;
-            padding: 15px;
-            text-align: center;
-            position: relative;
-            z-index: 2;
-            ${this.state.template === 'decorative' ? 
-                `background: linear-gradient(135deg, ${document.getElementById('headerColorInput').value} 0%, ${this.adjustColor(document.getElementById('headerColorInput').value, 20)} 100%);` : 
-                'background: transparent;'}
-        `;
-    }
-    
-    // Name text
-    const nameText = clone.querySelector('.name-text');
-    if (nameText) {
-        nameText.textContent = document.getElementById('nameInput').value;
-        nameText.style.cssText = `
-            font-size: ${this.state.fontSizes.name}px;
-            font-weight: bold;
-            color: ${this.state.template === 'plain' ? 'white' : '#333'};
-            font-family: ${this.state.fonts.name};
-            text-shadow: ${this.state.template === 'plain' ? '2px 2px 8px rgba(0,0,0,0.7)' : '2px 2px 4px rgba(0,0,0,0.2)'};
-        `;
-    }
-    
-    // NIP text
-    const nipText = clone.querySelector('.nip-text');
-    if (nipText) {
-        const nipValue = document.getElementById('nipInput').value;
-        if (nipValue) {
-            nipText.textContent = `NIP: ${nipValue}`;
-            nipText.style.display = 'block';
-        } else {
-            nipText.style.display = 'none';
-        }
-        nipText.style.cssText = `
-            font-size: ${this.state.fontSizes.other}px;
-            margin-top: 5px;
-            color: ${this.state.template === 'plain' ? 'white' : '#333'};
-            font-family: ${this.state.fonts.other};
-            text-shadow: ${this.state.template === 'plain' ? '2px 2px 8px rgba(0,0,0,0.7)' : '1px 1px 2px rgba(0,0,0,0.2)'};
-        `;
-    }
-    
-    // Green side bars dan dekoratif hanya untuk kartu depan
-    if (!isBackCard && this.state.template === 'decorative') {
-        this._fixGreenSideBarsForDownload(clone);
-        this._fixDecorativeElementsForDownload(clone);
-    }
-    
-    // Back card specific elements
-    if (isBackCard) {
-        this._fixBackCardElements(clone);
-    }
-}
 
         applyClipPathInline(element, shape) {
             const clipPaths = {
@@ -3200,12 +3580,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 'image/png');
         }
 
-        _generateFileName(side) {
-            const name = document.getElementById('nameInput').value || 'kartu';
-            const cleanName = name.replace(/\s+/g, '_');
-            const suffix = side === 'front' ? '_Depan' : side === 'back' ? '_Belakang' : '_Kedua_Sisi';
-            return `${cleanName}_ID_Card${suffix}.png`;
-        }
+_generateFileName(side) {
+    const name = document.getElementById('nameInput').value || 'kartu';
+    const cleanName = name.replace(/\s+/g, '_');
+    const suffix = side === 'front' ? '_Depan' : side === 'back' ? '_Belakang' : '_Kedua_Sisi';
+    return `${cleanName}_ID_Card${suffix}.png`;
+}
 
         // ============================================
         // UTILITY FUNCTIONS
