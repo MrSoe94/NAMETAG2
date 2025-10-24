@@ -932,7 +932,40 @@ input:checked + .toggle-label:before {
 .import-settings {
     background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
 }
-    </style>
+
+
+/* ============================================
+   LOGO CONTAINER TRANSPARANSI
+   ============================================ */
+
+/* Pastikan container logo memiliki transisi yang halus */
+#logoContainer {
+    min-height: 60px; /* Tetap mempertahankan tinggi minimum */
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    /* Tambahkan transisi untuk efek fade in/out */
+    transition: opacity 0.3s ease;
+}
+
+/* Class ini akan membuat SEMUA isi container menjadi transparan */
+#logoContainer.logo-hidden {
+    opacity: 0; /* Membuat seluruh container dan isinya tak terlihat */
+    /* Pastikan tidak ada background atau border yang muncul */
+    background: transparent !important;
+    border: transparent !important;
+    /* Agar tidak bisa diklik saat tersembunyi (opsional, tapi bagus) */
+    pointer-events: none;
+}
+
+/* Container untuk toggle logo */
+.logo-toggle-container {
+    padding: 8px 0;
+    border-top: 1px solid #e0e0e0;
+    margin-top: 10px;
+}
+ 
+ </style>
 </head>
 <body>
 
@@ -1034,6 +1067,13 @@ input:checked + .toggle-label:before {
                                 <span>📁</span><span class="file-name">Pilih file logo...</span>
                             </label>
                         </div>
+                            <!-- Tambahkan toggle switch di sini -->
+    <div class="logo-toggle-container" style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between;">
+            <label class="toggle-switch">
+            <input type="checkbox" id="logoToggle" checked>
+            <span class="toggle-label"></span>
+        </label>
+    </div>
                     </div>
                     <div class="input-group">
                         <label class="input-label">Nama Perusahaan</label>
@@ -1291,6 +1331,33 @@ input:checked + .toggle-label:before {
 document.addEventListener('DOMContentLoaded', () => {
     class IDCardMaker {
         constructor() {
+// Fungsi untuk mengontrol tampilan logo
+const logoToggle = document.getElementById('logoToggle');
+const logoContainer = document.getElementById('logoContainer');
+
+// Fungsi untuk memperbarui visibilitas logo (versi baru yang lebih sederhana)
+function updateLogoVisibility() {
+    if (logoToggle.checked) {
+        // Jika toggle ON, hapus class 'logo-hidden'
+        logoContainer.classList.remove('logo-hidden');
+    } else {
+        // Jika toggle OFF, tambahkan class 'logo-hidden'
+        logoContainer.classList.add('logo-hidden');
+    }
+}
+
+// Event listener untuk toggle switch
+logoToggle.addEventListener('change', updateLogoVisibility);
+
+// Inisialisasi status logo saat halaman dimuat
+updateLogoVisibility();
+
+// Event listener untuk toggle switch
+logoToggle.addEventListener('change', updateLogoVisibility);
+
+// Inisialisasi status logo saat halaman dimuat
+updateLogoVisibility();
+
             // State Management
             this.state = {
                 logoUrl: null,
@@ -3229,7 +3296,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Clear dan regenerate QR code
                 qrCode.innerHTML = '';
                 const data = this.getFormData();
-                const vcardData = `BEGIN:VCARD\nVERSION:3.0\nFN:${data.name}\nN:;${data.name};;;\nORG:${data.company}\nTITLE:${data.position}\nTEL:${data.phone}\nEMAIL:${data.email}\nADR:;;${data.office};;;;\nEND:VCARD`;
+                const vcardData = `${data.name}\n${data.nip}\n${data.company}\n${data.position}\n${data.phone}\n${data.email}\n${data.office}\nCreate by : Sugandi,S.Kom`;
                 
                 new QRCode(qrCode, {
                     text: vcardData,
