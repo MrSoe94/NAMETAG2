@@ -8,6 +8,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <!-- html2canvas Library for Download -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- SheetJS for XLSX parsing/creation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- JSZip for creating ZIP archives -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         /* ============================================
            CSS CUSTOM PROPERTIES (VARIABLES)
@@ -37,13 +41,95 @@
 
         body {
             font-family: var(--font-family);
-            background: var(--primary-gradient);
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            color: #333;
             min-height: 100vh;
             display: flex;
+            align-items: flex-start;
             justify-content: center;
-            align-items: center;
-            padding: 20px;
+            padding: 30px;
         }
+
+        /* Batch Photos Gallery */
+        .batch-photos-gallery {
+            margin-top: 10px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+        .batch-photo-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px;
+            background: #f6f8fa;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            min-width: 0;
+        }
+        .batch-photo-thumb {
+            width: 36px;
+            height: 36px;
+            object-fit: cover;
+            border-radius: 6px;
+            flex-shrink: 0;
+        }
+        .batch-photo-name {
+            font-size: 12px;
+            color: #4b5563;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Batch Records Preview */
+        .batch-preview {
+            margin-top: 16px;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 10px;
+        }
+        .batch-preview-header {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #374151;
+        }
+        .batch-preview-list {
+            display: grid;
+            grid-template-columns: 48px 1fr 1fr;
+            gap: 8px;
+            align-items: center;
+        }
+        .batch-preview-item {
+            display: contents;
+        }
+        .batch-preview-thumb {
+            width: 44px;
+            height: 44px;
+            border-radius: 6px;
+            object-fit: cover;
+            border: 1px solid #e5e7eb;
+        }
+        .batch-preview-name {
+            font-size: 13px;
+            color: #111827;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .batch-preview-meta {
+            font-size: 12px;
+            color: #6b7280;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Person image should not stretch */
+        .card-image-container { display: flex; justify-content: center; align-items: center; }
+        .person-image { width: 300px; height: 350px; border-radius: 15px; overflow: hidden; display: flex; justify-content: center; align-items: center; background: #f3f4f6; position: relative; }
+        .person-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
         .container {
             display: flex;
@@ -240,22 +326,23 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 10px;
+            padding: 10px 53px; /* beri padding kiri/kanan agar frame pas di tengah antara green side */
             position: relative;
             min-height: 0;
         }
         .person-image {
             width: 300px;
             height: 350px;
-            background: url('data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCg0KPCFET0NUWVBFIHN2ZyBQVUJMSUMgIi0vL1czQy8vRFREIFNWRyAxLjEvL0VOIiAiaHR0cDovL3d3dy53My5vcmcvR3JhcGhpY3MvU1ZHLzEuMS9EVEQvc3ZnMTEuZHRkIj4NCjwhLS0gVXBsb2FkZWQgdG86IFNWRyBSZXBvLCB3d3cuc3ZncmVwby5jb20sIEdlbmVyYXRvcjogU1ZHIFJlcG8gTWl4ZXIgVG9vbHMgLS0+DQo8c3ZnIGhlaWdodD0iODAwcHgiIHdpZHRoPSI4MDBweCIgdmVyc2lvbj0iMS4xIiBpZD0iX3gzMl8iIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIA0KCSB2aWV3Qm94PSIwIDAgNTEyIDUxMiIgIHhtbDpzcGFjZT0icHJlc2VydmUiPg0KPHN0eWxlIHR5cGU9InRleHQvY3NzIj4NCgkuc3Qwe2ZpbGw6IzAwMDAwMDt9DQo8L3N0eWxlPg0KPGc+DQoJPHBhdGggY2xhc3M9InN0MCIgZD0iTTM2NC4wMzIsMzU1LjAzNWMtMy44NjItMS40NDYtOC4wNzItMy40MzYtMTIuMzUtNS43OTRsLTcxLjU3LDk4LjkzNWwtNS4wOS02NC44MTRoLTM4LjAzM2wtNS4wOTEsNjQuODE0DQoJCWwtNzEuNTY5LTk4LjkzNWMtNC40MDgsMi40NjYtOC42NTYsNC40ODctMTIuMzYxLDUuNzk0Yy0zNy40NzgsMTMuMTkzLTEyOS41NDksNTEuMTM2LTEyMy42MDcsMTIyLjIxDQoJCUMyNS43ODcsNDk0LjMwMSwxMTkuNTgyLDUxMiwyNTYuMDA2LDUxMmMxMzYuNDEzLDAsMjMwLjIwOC0xNy42OTksMjMxLjYzNC0zNC43NTUNCgkJQzQ5My41ODMsNDA2LjEwMiw0MDEuMjczLDM2OC45NjEsMzY0LjAzMiwzNTUuMDM1eiIvPg0KCTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik0xNzEuNTAxLDIwOC4yNzFjNS4yMSwyOS41MTYsMTMuOTY2LDU1LjU1NCwyNS40OTQsNjguMzhjMCwxNS4zODIsMCwyNi42MDQsMCwzNS41ODcNCgkJYzAsMC45MDItMC4xNTgsMS44NTItMC40MTYsMi44MzNsNDAuNDEsMTkuNDYydjI4LjU0NWgzOC4wMzN2LTI4LjU0NWw0MC4zOS0xOS40NTJjLTAuMjU4LTAuOTgxLTAuNDE2LTEuOTMyLTAuNDE2LTIuODQzDQoJCWMwLTguOTgzLDAtMjAuMjA1LDAtMzUuNTg3YzExLjU0OC0xMi44MjYsMjAuMzA0LTM4Ljg2NCwyNS41MTQtNjguMzhjMTIuMTQzLTQuMzM4LDE5LjA5Ni0xMS4yODEsMjcuNzYyLTQxLjY1OA0KCQljOS4yMzEtMzIuMzU4LTEzLjg3Ni0zMS4yNTgtMTMuODc2LTMxLjI1OGMxOC42OS02MS44NzMtNS45MjItMTIwLjAyMi00Ny4xMjQtMTE1Ljc1M2MtMjguNDI2LTQ5LjczLTEyMy42MjcsMTEuMzYtMTUzLjQ4LDcuMTAyDQoJCWMwLDE3LjA1NSw3LjExMiwyOS44NDIsNy4xMTIsMjkuODQyYy0xMC4zNzksMTkuNjktNi4zNzgsNTguOTUxLTMuNDQ2LDc4LjgwOWMtMS43MDQtMC4wMy0yMi42MDIsMC4xODgtMTMuNzI4LDMxLjI1OA0KCQlDMTUyLjQwNSwxOTYuOTksMTU5LjMzOCwyMDMuOTM0LDE3MS41MDEsMjA4LjI3MXoiLz4NCjwvZz4NCjwvc3ZnPg==') center/cover;
+            background: url('data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCg0KPCFET0NUWVBFIHN2ZyBQVUJMSUMgIi0vL1czQy8vRFREIFNWRyAxLjEvL0VOIiAiaHR0cDovL3d3dy53My5vcmcvR3JhcGhpY3MvU1ZHLzEuMS9EVEQvc3ZnMTEuZHRkIj4NCjwhLS0gVXBsb2FkZWQgdG86IFNWRyBSZXBvLCB3d3cuc3ZncmVwby5jb20sIEdlbmVyYXRvcjogU1ZHIFJlcG8gTWl4ZXIgVG9vbHMgLS0+DQo8c3ZnIGhlaWdodD0iODAwcHgiIHdpZHRoPSI4MDBweCIgdmVyc2lvbj0iMS4xIiBpZD0iX3gzMl8iIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIA0KCSB2aWV3Qm94PSIwIDAgNTEyIDUxMiIgIHhtbDpzcGFjZT0icHJlc2VydmUiPg0KPHN0eWxlIHR5cGU9InRleHQvY3NzIj4NCgkuc3Qwe2ZpbGw6IzAwMDAwMDt9DQo8L3N0eWxlPg0KPGc+DQoJPHBhdGggY2xhc3M9InN0MCIgZD0iTTM2NC4wMzIsMzU1LjAzNWMtMy44NjItMS40NDYtOC4wNzItMy40MzYtMTIuMzUtNS43OTRsLTcxLjU3LDk4LjkzNWwtNS4wOS02NC44MTRoLTM4LjAzM2wtNS4wOTEsNjQuODE0DQoJCWwtNzEuNTY5LTk4LjkzNWMtNC40MDgsMi40NjYtOC42NTYsNC40ODctMTIuMzYxLDUuNzk0Yy0zNy40NzgsMTMuMTkzLTEyOS41NDksNTEuMTM2LTEyMy42MDcsMTIyLjIxDQoJCUMyNS43ODcsNDk0LjMwMSwxMTkuNTgyLDUxMiwyNTYuMDA2LDUxMmMxMzYuNDEzLDAsMjMwLjIwOC0xNy42OTksMjMxLjYzNC0zNC43NTUNCgkJQzQ5My41ODMsNDA2LjEwMiw0MDEuMjczLDM2OC45NjEsMzY0LjAzMiwzNTUuMDM1eiIvPg0KCTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik0xNzEuNTAxLDIwOC4yNzFjNS4yMSwyOS41MTYsMTMuOTY2LDU1LjU1NCwyNS40OTQsNjguMzhjMCwxNS4zODIsMCwyNi42MDQsMCwzNS41ODcNCgkJYzAsMC45MDItMC4xNTgsMS44NTItMC40MTYsMi44MzNsNDAuNDEsMTkuNDYydjI4LjU0NWgzOC4wMzN2LTI4LjU0NWw0MC4zOS0xOS40NTJjLTAuMjU4LTAuOTgxLTAuNDE2LTEuOTMyLTAuNDE2LTIuODQzDQoJCWMwLTguOTgzLDAtMjAuMjA1LDAtMzUuNTg3YzExLjU0OC0xMi44MjYsMjAuMzA0LTM4Ljg2NCwyNS41MTQtNjguMzhjMTIuMTQzLTQuMzM4LDE5LjA5Ni0xMS4yODEsMjcuNzYyLTQxLjY1OA0KCQljOS4yMzEtMzIuMzU4LTEzLjg3Ni0zMS4yNTgtMTMuODc2LTMxLjI1OGMxOC42OS02MS44NzMtNS45MjItMTIwLjAyMi00Ny4xMjQtMTE1Ljc1M2MtMjguNDI2LTQ5LjczLTEyMy42MjcsMTEuMzYtMTUzLjQ4LDcuMTAyDQoJCWMwLDE3LjA1NSw3LjExMiwyOS44NDIsNy4xMTIsMjkuODQyYy0xMC4zNzksMTkuNjktNi4zNzgsNTguOTUxLTMuNDQ2LDc4LjgwOWMtMS43MDQtMC4wMy0yMi42MDIsMC4xODgtMTMuNzI4LDMxLjI1WA0KCQlDMTUyLjQwNSwxOTYuOTksMTU5LjMzOCwyMDMuOTM0LDE3MS41MDEsMjA4LjI3MXoiLz4NCjwvZz4NCjwvc3ZnPg==') center/cover;
             border-radius: 15px;
             box-shadow: 0 10px 20px rgba(0,0,0,0.2);
             overflow: hidden;
             max-width: 100%;
             max-height: 100%;
             flex-shrink: 0;
+            position: relative;
         }
-        .person-image img { width: 100%; height: 100%; object-fit: cover; }
+        .person-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .card-footer {
     padding: 15px;
     text-align: center;
@@ -1009,8 +1096,8 @@ input:checked + .toggle-label:before {
                     <div class="card-face card-front card-front-decorative" id="cardFront">
                         <!-- Decorative Elements Container -->
                         <div class="decorative-circles" id="decorativeCirclesFront"></div>
-                        <div class="green-side-left" id="greenSideLeft"><div class="dept-text" id="deptTextLeft">OPERATOR</div></div>
-                        <div class="green-side-right" id="greenSideRight"><div class="dept-text" id="deptTextRight">OPERATOR</div></div>
+                        <div class="green-side-left" id="greenSideLeft"><div class="dept-text" id="deptTextLeft"></div></div>
+                        <div class="green-side-right" id="greenSideRight"><div class="dept-text" id="deptTextRight"></div></div>
                         
                         <div class="card-header">
                             <div class="logo-container" id="logoContainer">
@@ -1028,7 +1115,7 @@ input:checked + .toggle-label:before {
                         
                         <div class="card-footer">
                             <div class="name-text" id="nameText">SUGANDI,S.Kom</div>
-                            <div class="nip-text" id="nipText">NIP: 1234567890</div>
+                            <div class="nip-text" id="nipText">1234567890</div>
                         </div>
                     </div>
                     <!-- Back Side -->
@@ -1039,7 +1126,7 @@ input:checked + .toggle-label:before {
                         <div class="back-content">
                             <div class="back-info">
                                 <div class="info-item"><span id="backNameDisplay">Sugandi,S.Kom</span></div>
-                                <div class="info-item"><span id="backNipDisplay">NIP</span></div>
+                                <div class="info-item"><span id="backNipDisplay"></span></div>
                                 <div class="info-item"><span id="backEmailDisplay">sugandigtexs@gmail.com</span></div>
                                 <div class="info-item"><span id="backPhoneDisplay">+62 852 - 0646 - 1713</span></div>
                                 <div class="info-item"><span id="backPositionDisplay">OPERATOR</span></div>
@@ -1058,6 +1145,31 @@ input:checked + .toggle-label:before {
         <div class="control-panel">
             <h2 class="panel-title">📝 Panel Kontrol</h2>
             <form id="controlForm">
+                <!-- Batch (XLSX) Section -->
+                <div class="panel-section">
+                    <div class="section-title"><span>📦</span> Batch (XLSX)</div>
+                    <div class="input-group">
+                        <label class="input-label">File XLSX</label>
+                        <div class="file-upload-wrapper">
+                            <input type="file" id="xlsxInput" class="file-upload-input" accept=".xlsx,.xls,.csv">
+                            <label for="xlsxInput" class="file-upload-label" id="xlsxLabel">
+                                <span>📁</span><span class="file-name">Pilih file XLSX...</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-primary" id="downloadBatchBtn">⬇️ Download Batch ZIP</button>
+                        <button type="button" class="btn btn-secondary" id="downloadXlsxTemplateBtn">📄 Unduh Template XLSX</button>
+                        <button type="button" class="btn" id="batchPhotosBtn">🖼️ Upload Foto Batch</button>
+                        <input type="file" id="batchPhotosInput" accept="image/*,.heic,.heif" multiple style="display:none;" />
+                        <button type="button" class="btn btn-danger" id="batchPhotosClearBtn">🗑️ Hapus Semua</button>
+                    </div>
+                    <div id="batchPhotosGallery" class="batch-photos-gallery"></div>
+                    <div id="batchPreview" class="batch-preview">
+                        <div class="batch-preview-header">Preview Data Batch</div>
+                        <div id="batchPreviewList" class="batch-preview-list"></div>
+                    </div>
+                </div>
                 <!-- Template Section -->
                 <div class="panel-section">
                     <div class="section-title"><span>🎨</span> Template Kartu</div>
@@ -1069,6 +1181,10 @@ input:checked + .toggle-label:before {
                         <div class="template-option" data-template="plain">
                             <input type="radio" id="templatePlain" name="cardTemplate" value="plain">
                             <label for="templatePlain"><span>🖼️ Polos</span></label>
+                        </div>
+                        <div class="template-option" data-template="decorative2">
+                            <input type="radio" id="templateDecorative2" name="cardTemplate" value="decorative2">
+                            <label for="templateDecorative2"><span>✨ Dekoratif 2</span></label>
                         </div>
                     </div>
                 </div>
@@ -1146,6 +1262,11 @@ input:checked + .toggle-label:before {
                             <input type="range" class="font-size-slider" id="companyFontSizeInput" min="12" max="32" value="18">
                             <span class="font-size-value" id="companyFontSizeValue">18px</span>
                         </div>
+                        <div class="font-size-control" style="margin-top:6px;">
+                            <label class="input-label" style="margin:0;">Tebal:</label>
+                            <input type="checkbox" id="companyFontBoldToggle" checked style="margin-left:8px;">
+                            <span style="font-size:12px;color:#555;">Bold</span>
+                        </div>
                         <div class="font-preview" id="companyFontPreview">UPT SD NEGERI 067953</div>
                     </div>
                     
@@ -1178,6 +1299,11 @@ input:checked + .toggle-label:before {
                             <label class="input-label" style="margin:0;">Ukuran:</label>
                             <input type="range" class="font-size-slider" id="nameFontSizeInput" min="16" max="40" value="24">
                             <span class="font-size-value" id="nameFontSizeValue">24px</span>
+                        </div>
+                        <div class="font-size-control" style="margin-top:6px;">
+                            <label class="input-label" style="margin:0;">Tebal:</label>
+                            <input type="checkbox" id="nameFontBoldToggle" checked style="margin-left:8px;">
+                            <span style="font-size:12px;color:#555;">Bold</span>
                         </div>
                         <div class="font-preview" id="nameFontPreview">SUGANDI,S.Kom</div>
                     </div>
@@ -1212,7 +1338,12 @@ input:checked + .toggle-label:before {
                             <input type="range" class="font-size-slider" id="otherFontSizeInput" min="10" max="24" value="16">
                             <span class="font-size-value" id="otherFontSizeValue">16px</span>
                         </div>
-                        <div class="font-preview" id="otherFontPreview">NIP: 1234567890</div>
+                        <div class="font-size-control" style="margin-top:6px;">
+                            <label class="input-label" style="margin:0;">Tebal:</label>
+                            <input type="checkbox" id="otherFontBoldToggle" style="margin-left:8px;">
+                            <span style="font-size:12px;color:#555;">Bold</span>
+                        </div>
+                        <div class="font-preview" id="otherFontPreview">1234567890</div>
                     </div>
                 </div>
 
@@ -1276,7 +1407,23 @@ input:checked + .toggle-label:before {
                                 <span>📷</span><span class="file-name">Pilih foto person...</span>
                             </label>
                         </div>
+                        <div style="margin-top:10px;">
+                            <div class="input-group">
+                                <label class="input-label">Posisi Vertikal</label>
+                                <input type="range" id="personPosYInput" min="-100" max="200" value="50" />
+                                <div id="personPosYValue">50%</div>
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">Zoom Foto</label>
+                                <input type="range" id="personZoomInput" min="50" max="300" value="100" />
+                                <div id="personZoomValue">100%</div>
+                            </div>
+                            <div class="input-group">
+                                <button type="button" class="btn btn-secondary" id="resetPhotoBtn">↺ Reset Foto</button>
+                            </div>
+                        </div>
                     </div>
+                    
                     <div class="input-group"><label class="input-label">Nama Lengkap</label><input type="text" class="input-field" id="nameInput" value="SUGANDI,S.Kom"></div>
                     <div class="input-group"><label class="input-label">NIP</label><input type="text" class="input-field" id="nipInput" value="1234567890"></div>
                     <div class="input-group"><label class="input-label">Jabatan</label><input type="text" class="input-field" id="positionInput" value="OPERATOR"></div>
@@ -1383,17 +1530,17 @@ logoToggle.addEventListener('change', updateLogoVisibility);
 // Inisialisasi status logo saat halaman dimuat
 updateLogoVisibility();
 
-// Event listener untuk toggle switch
-logoToggle.addEventListener('change', updateLogoVisibility);
-
-// Inisialisasi status logo saat halaman dimuat
-updateLogoVisibility();
-
             // State Management
             this.state = {
                 logoUrl: null,
                 photoUrl: null,
                 isFlipped: false,
+                photoPosition: { x: 50, y: 50 },
+                photoZoom: 100,
+                photoOriginalSize: false,
+                photoAllowOverflow: false,
+                currentRecordIndex: -1,
+                pendingRecordSettings: null,
                 template: 'decorative',
                 frontBackground: { type: 'color', value: '#f5f7fa' },
                 backBackground: { type: 'color', value: '#667eea' },
@@ -1406,6 +1553,11 @@ updateLogoVisibility();
                     company: 18,
                     name: 24,
                     other: 16
+                },
+                fontWeights: {
+                    company: true,
+                    name: true,
+                    other: false
                 },
                 customFonts: {
                     company: null,
@@ -1446,7 +1598,8 @@ updateLogoVisibility();
                     ],
                     back: []
                 },
-                nextId: 4
+                nextId: 3,
+                batchRecords: []
             };
 
             // Cache DOM Elements
@@ -1503,6 +1656,10 @@ updateLogoVisibility();
                 companyFontSizeValue: document.getElementById('companyFontSizeValue'),
                 nameFontSizeValue: document.getElementById('nameFontSizeValue'),
                 otherFontSizeValue: document.getElementById('otherFontSizeValue'),
+                // Font weight (bold) toggles
+                companyFontBoldToggle: document.getElementById('companyFontBoldToggle'),
+                nameFontBoldToggle: document.getElementById('nameFontBoldToggle'),
+                otherFontBoldToggle: document.getElementById('otherFontBoldToggle'),
                 // Decorative Elements Controls
                 decorativeSection: document.getElementById('decorativeSection'),
                 elementsContainer: document.getElementById('elementsContainer'),
@@ -1530,6 +1687,21 @@ updateLogoVisibility();
                 resetBtn: document.getElementById('resetBtn'),
                 flipBtn: document.getElementById('flipBtn'),
                 downloadBtns: document.querySelectorAll('.action-btn'),
+                // XLSX Batch
+                xlsxInput: document.getElementById('xlsxInput'),
+                xlsxLabel: document.getElementById('xlsxLabel'),
+                downloadBatchBtn: document.getElementById('downloadBatchBtn'),
+                downloadXlsxTemplateBtn: document.getElementById('downloadXlsxTemplateBtn'),
+                batchPhotosBtn: document.getElementById('batchPhotosBtn'),
+                batchPhotosInput: document.getElementById('batchPhotosInput'),
+                batchPhotosGallery: document.getElementById('batchPhotosGallery'),
+                batchPhotosClearBtn: document.getElementById('batchPhotosClearBtn'),
+                batchPreviewList: document.getElementById('batchPreviewList'),
+                // Photo position controls
+                personPosXInput: document.getElementById('personPosXInput'),
+                personPosYInput: document.getElementById('personPosYInput'),
+                personZoomInput: document.getElementById('personZoomInput'),
+                resetPhotoBtn: document.getElementById('resetPhotoBtn'),
                 // UI
                 loadingOverlay: document.getElementById('loadingOverlay'),
                 loadingText: document.getElementById('loadingText'),
@@ -1543,10 +1715,14 @@ updateLogoVisibility();
 
         init() {
             this.bindEvents();
-            this.renderElementsControls();
+            // Hapus seluruh elemen dekoratif dan sembunyikan UI
+            this.disableDecorative();
+            this.removeDecorativePanel();
             this.updateCard();
             this._addPrintStyles();
             this.showNotification('Selamat datang! Pilih template dan mulai kustomisasi.');
+            // Pastikan overlay loading tersembunyi saat start
+            this.hideLoading();
         }
 
         bindEvents() {
@@ -1561,8 +1737,75 @@ updateLogoVisibility();
                 });
             });
 
-            // Add element button
-            this.elements.addElementBtn.addEventListener('click', () => this.addNewElement());
+            // Add element button (diabaikan jika panel dihapus)
+            if (this.elements.addElementBtn) {
+                this.elements.addElementBtn.addEventListener('click', () => this.addNewElement());
+            }
+
+            // XLSX import
+            if (this.elements.xlsxInput) {
+                this.elements.xlsxInput.addEventListener('change', (e) => this.handleXlsxChange(e));
+            }
+            if (this.elements.downloadXlsxTemplateBtn) {
+                this.elements.downloadXlsxTemplateBtn.addEventListener('click', () => this.downloadXlsxTemplate());
+            }
+            if (this.elements.downloadBatchBtn) {
+                this.elements.downloadBatchBtn.addEventListener('click', () => this.downloadBatchZip());
+            }
+
+            // Batch photos upload
+            if (this.elements.batchPhotosBtn && this.elements.batchPhotosInput) {
+                this.elements.batchPhotosBtn.addEventListener('click', () => this.elements.batchPhotosInput.click());
+                this.elements.batchPhotosInput.addEventListener('change', (e) => this.handleBatchPhotosChange(e));
+            }
+            if (this.elements.batchPhotosClearBtn) {
+                this.elements.batchPhotosClearBtn.addEventListener('click', () => {
+                    this.state.batchPhotoMap = {};
+                    this.renderBatchPhotosGallery();
+                    // Recompute photoUrl for all records after clearing
+                    this.updateAllRecordPhotoUrls();
+                    this.showNotification('Daftar foto batch dikosongkan.');
+                });
+            }
+
+            // Preview list: click to load record to form
+            if (this.elements.batchPreviewList) {
+                this.elements.batchPreviewList.addEventListener('click', (e) => {
+                    const row = e.target.closest('.batch-preview-item');
+                    if (!row) return;
+                    const idx = parseInt(row.getAttribute('data-index'), 10);
+                    if (isNaN(idx)) return;
+                    const rec = this.state.batchRecords && this.state.batchRecords[idx];
+                    if (!rec) return;
+                    // Simpan setting record aktif sebelum pindah
+                    this.saveCurrentSettingsToRecord();
+                    // Pindah ke record baru
+                    this.state.currentRecordIndex = idx;
+                    this.setFormFromRecord(rec);
+                    this.updateCard();
+                });
+            }
+            if (this.elements.batchPhotosGallery) {
+                this.elements.batchPhotosGallery.addEventListener('click', (e) => {
+                    const btn = e.target.closest('[data-action="del-photo"]');
+                    if (!btn) return;
+                    const key = btn.getAttribute('data-key');
+                    if (!key || !this.state.batchPhotoMap) return;
+                    // Hapus nama dengan dan tanpa ekstensi, termasuk lowercase
+                    delete this.state.batchPhotoMap[key];
+                    const base = key.replace(/\.[^.]+$/, '');
+                    delete this.state.batchPhotoMap[base];
+                    delete this.state.batchPhotoMap[key.toLowerCase()];
+                    delete this.state.batchPhotoMap[base.toLowerCase()];
+                    const norm = (s) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    delete this.state.batchPhotoMap[norm(key)];
+                    delete this.state.batchPhotoMap[norm(base)];
+                    this.renderBatchPhotosGallery();
+                    this.renderBatchPreview();
+                    // Recompute photoUrl for all records after deletion
+                    this.updateAllRecordPhotoUrls();
+                });
+            }
 
             // Font selectors
             this.elements.companyFontSelect.addEventListener('change', (e) => this.handleFontChange(e, 'company'));
@@ -1573,6 +1816,32 @@ updateLogoVisibility();
             this.elements.companyFontSizeInput.addEventListener('input', (e) => this.handleFontSizeChange(e, 'company'));
             this.elements.nameFontSizeInput.addEventListener('input', (e) => this.handleFontSizeChange(e, 'name'));
             this.elements.otherFontSizeInput.addEventListener('input', (event) => this.handleFontSizeChange(event, 'other'));
+
+            // Font weight (bold) toggles
+            if (this.elements.companyFontBoldToggle) {
+                this.elements.companyFontBoldToggle.checked = !!this.state.fontWeights.company;
+                this.elements.companyFontBoldToggle.addEventListener('change', (e) => {
+                    this.state.fontWeights.company = e.target.checked;
+                    this.updateFontPreview('company', this.state.fonts.company);
+                    this.updateCard();
+                });
+            }
+            if (this.elements.nameFontBoldToggle) {
+                this.elements.nameFontBoldToggle.checked = !!this.state.fontWeights.name;
+                this.elements.nameFontBoldToggle.addEventListener('change', (e) => {
+                    this.state.fontWeights.name = e.target.checked;
+                    this.updateFontPreview('name', this.state.fonts.name);
+                    this.updateCard();
+                });
+            }
+            if (this.elements.otherFontBoldToggle) {
+                this.elements.otherFontBoldToggle.checked = !!this.state.fontWeights.other;
+                this.elements.otherFontBoldToggle.addEventListener('change', (e) => {
+                    this.state.fontWeights.other = e.target.checked;
+                    this.updateFontPreview('other', this.state.fonts.other);
+                    this.updateCard();
+                });
+            }
 
             // Font file uploads
             this.elements.companyFontInput.addEventListener('change', (e) => this.handleFontUpload(e, 'company'));
@@ -1592,6 +1861,46 @@ updateLogoVisibility();
             document.querySelectorAll('input[name="backBgType"]').forEach(radio => {
                 radio.addEventListener('change', () => this.toggleBackgroundOption('back'));
             });
+
+            // Photo position sliders
+            if (this.elements.personPosXInput) {
+                this.elements.personPosXInput.addEventListener('input', (e) => {
+                    this.state.photoPosition.x = parseInt(e.target.value) || 50;
+                    this.updateCard();
+                });
+            }
+            if (this.elements.personPosYInput) {
+                this.elements.personPosYInput.addEventListener('input', (e) => {
+                    this.state.photoPosition.y = parseInt(e.target.value) || 50;
+                    this.updateCard();
+                });
+            }
+            if (this.elements.personZoomInput) {
+                this.elements.personZoomInput.addEventListener('input', (e) => {
+                    const val = parseInt(e.target.value);
+                    const clamped = Math.min(300, Math.max(50, isNaN(val) ? 100 : val));
+                    this.state.photoZoom = clamped;
+                    this.updateCard();
+                });
+            }
+            if (this.elements.resetPhotoBtn) {
+                this.elements.resetPhotoBtn.addEventListener('click', () => {
+                    // reset values
+                    this.state.photoPosition = { x: 50, y: 50 };
+                    this.state.photoZoom = 100;
+                    // reflect to inputs
+                    const yEl = document.getElementById('personPosYInput');
+                    const zEl = document.getElementById('personZoomInput');
+                    const yVal = document.getElementById('personPosYValue');
+                    const zVal = document.getElementById('personZoomValue');
+                    if (yEl) yEl.value = '50';
+                    if (zEl) zEl.value = '100';
+                    if (yVal) yVal.textContent = '50%';
+                    if (zVal) zVal.textContent = '100%';
+                    // re-render
+                    this.updateCard();
+                });
+            }
 
             // Toggle untuk jabatan
             if (this.elements.showPositionToggle) {
@@ -1615,39 +1924,324 @@ updateLogoVisibility();
             this.elements.resetBtn.addEventListener('click', () => this.resetCard());
             this.elements.flipBtn.addEventListener('click', () => this.flipCard());
             this.elements.downloadBtns.forEach(btn => {
-                btn.addEventListener('click', () => this.downloadCard(btn.dataset.side));
+                const side = btn.dataset.side;
+                if (!side) return; // hanya tombol dengan data-side yang valid
+                btn.addEventListener('click', () => this.downloadCard(side));
             });
 
             // Keyboard shortcut
             document.addEventListener('keydown', (e) => this.handleKeyboard(e));
-
-            // Event delegation for dynamic elements
-            this.elements.elementsContainer.addEventListener('change', (e) => {
-                if (e.target.classList.contains('shape-select')) {
-                    const elementId = parseInt(e.target.dataset.elementId);
-                    this.updateElement(elementId, 'shape', e.target.value);
-                }
+            // ESC untuk menutup overlay jika pernah tersisa
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') this.hideLoading();
             });
 
-            this.elements.elementsContainer.addEventListener('input', (e) => {
-                if (e.target.classList.contains('size-slider')) {
-                    const elementId = parseInt(e.target.dataset.elementId);
-                    const value = parseInt(e.target.value);
-                    this.updateElement(elementId, 'size', value);
-                } else if (e.target.classList.contains('position-slider')) {
-                    const elementId = parseInt(e.target.dataset.elementId);
-                    const property = e.target.dataset.property;
-                    const value = parseInt(e.target.value);
-                    this.updateElement(elementId, property, value);
+            // Klik overlay untuk menutup (jaga-jaga jika pernah tersisa)
+            if (this.elements.loadingOverlay) {
+                this.elements.loadingOverlay.addEventListener('click', () => this.hideLoading());
+            }
+
+            // Event delegation for dynamic elements (diabaikan jika panel dihapus)
+            if (this.elements.elementsContainer) {
+                this.elements.elementsContainer.addEventListener('change', (e) => {
+                    if (e.target.classList.contains('shape-select')) {
+                        const elementId = parseInt(e.target.dataset.elementId);
+                        this.updateElement(elementId, 'shape', e.target.value);
+                    }
+                });
+                this.elements.elementsContainer.addEventListener('input', (e) => {
+                    if (e.target.classList.contains('size-slider')) {
+                        const elementId = parseInt(e.target.dataset.elementId);
+                        const value = parseInt(e.target.value);
+                        this.updateElement(elementId, 'size', value);
+                    } else if (e.target.classList.contains('position-slider')) {
+                        const elementId = parseInt(e.target.dataset.elementId);
+                        const property = e.target.dataset.property;
+                        const value = parseInt(e.target.value);
+                        this.updateElement(elementId, property, value);
+                    }
+                });
+            }
+
+            if (this.elements.elementsContainer) {
+                this.elements.elementsContainer.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('delete-element-btn')) {
+                        const elementId = parseInt(e.target.dataset.elementId);
+                        this.removeElement(elementId);
+                    }
+                });
+            }
+        }
+
+        async handleXlsxChange(e) {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            try {
+                // Update label
+                if (this.elements.xlsxLabel) {
+                    const nameSpan = this.elements.xlsxLabel.querySelector('.file-name');
+                    if (nameSpan) nameSpan.textContent = file.name;
+                    this.elements.xlsxLabel.classList.add('has-file');
                 }
+
+                const isCsv = file.name.toLowerCase().endsWith('.csv');
+                const reader = new FileReader();
+
+                const parseRecords = (rows) => {
+                    // Normalisasi keys: lower-case
+                    const norm = (s) => (s || '').toString().trim().toLowerCase();
+                    const out = [];
+                    for (const r of rows) {
+                        // skip empty rows
+                        const vals = Object.values(r || {}).map(v => (v ?? '').toString().trim());
+                        if (vals.join('') === '') continue;
+                        const get = (k) => r[k] ?? r[k.toUpperCase()] ?? r[k.toLowerCase()];
+                        out.push({
+                            name: get('Name') ?? '',
+                            nip: get('NIP') ?? '',
+                            email: get('Email') ?? '',
+                            phone: get('Phone') ?? '',
+                            position: get('Position') ?? '',
+                            office: get('Office') ?? '',
+                            company: get('Company') ?? '',
+                            photoUrl: get('Photo') ?? '',
+                            photoFile: get('PhotoFile') ?? ''
+                        });
+                    }
+                    return out;
+                };
+
+                const handleXlsx = async (data) => {
+                    if (typeof XLSX === 'undefined') {
+                        throw new Error('Library XLSX belum dimuat.');
+                    }
+                    const wb = XLSX.read(data, { type: 'array' });
+                    const ws = wb.Sheets[wb.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+                    this.state.batchRecords = parseRecords(rows).map(r => ({
+                        ...r,
+                        photoUrl: r.photoUrl || this.resolvePhotoForRecord(r) || ''
+                    }));
+                    this.renderBatchPhotosGallery();
+                    this.renderBatchPreview();
+                    this.showNotification(`Berhasil memuat ${this.state.batchRecords.length} data batch.`);
+                };
+
+                const handleCsv = async (text) => {
+                    if (typeof XLSX !== 'undefined') {
+                        // Gunakan XLSX untuk parsing CSV agar robust
+                        const wb = XLSX.read(text, { type: 'string' });
+                        const ws = wb.Sheets[wb.SheetNames[0]];
+                        const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+                        this.state.batchRecords = parseRecords(rows).map(r => ({
+                            ...r,
+                            photoUrl: r.photoUrl || this.resolvePhotoForRecord(r) || ''
+                        }));
+                    } else {
+                        // Parser CSV sederhana
+                        const lines = text.replace(/\r/g, '').split('\n').filter(Boolean);
+                        if (lines.length === 0) return;
+                        const headers = lines[0].split(',').map(h => h.replace(/^"|"$/g, ''));
+                        const rows = lines.slice(1).map(line => {
+                            const cols = line.split(',');
+                            const obj = {};
+                            headers.forEach((h, i) => obj[h] = (cols[i] || '').replace(/^"|"$/g, ''));
+                            return obj;
+                        });
+                        this.state.batchRecords = parseRecords(rows);
+                    }
+                    this.renderBatchPhotosGallery();
+                    this.renderBatchPreview();
+                    this.showNotification(`Berhasil memuat ${this.state.batchRecords.length} data batch.`);
+                };
+
+                if (isCsv) {
+                    reader.onload = (ev) => handleCsv(ev.target.result);
+                    reader.readAsText(file);
+                } else {
+                    reader.onload = (ev) => handleXlsx(ev.target.result);
+                    reader.readAsArrayBuffer(file);
+                }
+            } catch (err) {
+                console.error(err);
+                this.showNotification('Gagal memuat file batch.', 'error');
+            }
+        }
+
+        async handleBatchPhotosChange(e) {
+            const files = Array.from(e.target.files || []);
+            if (!files.length) return;
+            if (!this.state.batchPhotoMap) this.state.batchPhotoMap = {};
+
+            const readFileAsDataURL = (file) => new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
             });
 
-            this.elements.elementsContainer.addEventListener('click', (e) => {
-                if (e.target.classList.contains('delete-element-btn')) {
-                    const elementId = parseInt(e.target.dataset.elementId);
-                    this.removeElement(elementId);
+            try {
+                // De-duplicate only within current selection (case-insensitive). Allow replacing existing entries.
+                const seen = new Set();
+                const uniqueFiles = files.filter(f => {
+                    const key = (f.name || '').trim().toLowerCase();
+                    if (!key || seen.has(key)) return false;
+                    seen.add(key);
+                    return true;
+                });
+
+                const results = await Promise.all(uniqueFiles.map(async (f) => ({
+                    name: f.name,
+                    dataUrl: await readFileAsDataURL(f)
+                })));
+
+                results.forEach(({ name, dataUrl }) => {
+                    const full = name.trim();
+                    const fullLc = full.toLowerCase();
+                    const base = full.replace(/\.[^.]+$/, '');
+                    const baseLc = base.toLowerCase();
+                    const norm = (s) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    const fullNorm = norm(full);
+                    const baseNorm = norm(base);
+                    // Simpan untuk semua variasi kunci
+                    this.state.batchPhotoMap[full] = dataUrl;
+                    this.state.batchPhotoMap[base] = dataUrl;
+                    this.state.batchPhotoMap[fullLc] = dataUrl;
+                    this.state.batchPhotoMap[baseLc] = dataUrl;
+                    this.state.batchPhotoMap[fullNorm] = dataUrl;
+                    this.state.batchPhotoMap[baseNorm] = dataUrl;
+                });
+
+                this.renderBatchPhotosGallery();
+                // Recompute photoUrl for all records now that photos are uploaded
+                this.updateAllRecordPhotoUrls();
+                // Auto-apply first record to form so photo reflects
+                if (this.state.batchRecords && this.state.batchRecords.length > 0) {
+                    this.state.currentRecordIndex = 0;
+                    this.setFormFromRecord(this.state.batchRecords[0]);
+                    this.updateCard();
                 }
+                this.showNotification(`Berhasil memuat ${results.length} foto batch.`);
+                e.target.value = '';
+            } catch (err) {
+                console.error(err);
+                this.showNotification('Gagal memuat foto batch.', 'error');
+            }
+        }
+
+        renderBatchPhotosGallery() {
+            const wrap = this.elements.batchPhotosGallery;
+            if (!wrap) return;
+            wrap.innerHTML = '';
+            const items = [];
+            if (this.state && this.state.batchPhotoMap) {
+                const seen = new Set();
+                for (const [name, url] of Object.entries(this.state.batchPhotoMap)) {
+                    if (name.indexOf('.') === -1) continue; // skip alias
+                    const key = name.toLowerCase();
+                    if (seen.has(key)) continue;
+                    seen.add(key);
+                    items.push({ name, url });
+                }
+            }
+            if (!items.length) {
+                wrap.textContent = '';
+                return;
+            }
+            // Sort by name for stable UI
+            items.sort((a,b) => a.name.localeCompare(b.name));
+            const frag = document.createDocumentFragment();
+            items.slice(0, 80).forEach(({ name, url }) => {
+                const el = document.createElement('div');
+                el.className = 'batch-photo-item';
+                el.innerHTML = `<img class="batch-photo-thumb" src="${url}" alt="${name}"><div class="batch-photo-name" title="${name}">${name}</div><button class="btn" data-action="del-photo" data-key="${name}" title="Hapus">✖</button>`;
+                frag.appendChild(el);
             });
+            wrap.appendChild(frag);
+        }
+
+        renderBatchPreview() {
+            const list = this.elements.batchPreviewList;
+            if (!list) return;
+            list.innerHTML = '';
+            const recs = Array.isArray(this.state.batchRecords) ? this.state.batchRecords : [];
+            if (!recs.length) return;
+            const norm = (s) => (s || '').toString().toLowerCase().replace(/[^a-z0-9]/g, '');
+            const map = this.state.batchPhotoMap || {};
+            const resolvePhoto = (rec) => {
+                if (rec.photoUrl) return rec.photoUrl;
+                const raw = (rec.photoFile || rec.photofile || '').toString().trim();
+                if (!raw) return '';
+                const base = raw.replace(/\.[^.]+$/, '');
+                return map[raw] || map[raw.toLowerCase()] || map[base] || map[base.toLowerCase()] || map[norm(raw)] || map[norm(base)] || '';
+            };
+            const frag = document.createDocumentFragment();
+            recs.slice(0, 100).forEach((rec, index) => {
+                const img = document.createElement('img');
+                img.className = 'batch-preview-thumb';
+                img.src = resolvePhoto(rec) || 'https://picsum.photos/seed/preview/88/88';
+                const name = document.createElement('div');
+                name.className = 'batch-preview-name';
+                name.textContent = rec.name || '-';
+                const meta = document.createElement('div');
+                meta.className = 'batch-preview-meta';
+                meta.textContent = rec.nip || rec.position || '';
+                // grid: append in order for display: contents rows
+                const row = document.createElement('div');
+                row.className = 'batch-preview-item';
+                row.setAttribute('data-index', String(index));
+                row.appendChild(img);
+                row.appendChild(name);
+                row.appendChild(meta);
+                frag.appendChild(row);
+            });
+            list.appendChild(frag);
+        }
+
+        resolvePhotoForRecord(rec, ignoreExisting = false) {
+            const map = this.state.batchPhotoMap || {};
+            const norm = (s) => (s || '').toString().toLowerCase().replace(/[^a-z0-9]/g, '');
+            // 1) Direct data URI in Photo (skip when ignoreExisting = true)
+            if (!ignoreExisting && rec && rec.photoUrl && /^data:image\//.test(rec.photoUrl)) return rec.photoUrl;
+            // 2) By PhotoFile
+            const raw = (rec && (rec.photoFile || rec.photofile) || '').toString().trim();
+            if (raw) {
+                const base = raw.replace(/\.[^.]+$/, '');
+                const byPhotoFile = map[raw] || map[raw.toLowerCase()] || map[base] || map[base.toLowerCase()] || map[norm(raw)] || map[norm(base)];
+                if (byPhotoFile) return byPhotoFile;
+            }
+            // 3) By Name
+            const name = (rec && rec.name || '').toString().trim();
+            if (name) {
+                const base = name.replace(/\.[^.]+$/, '');
+                const byName = map[name] || map[name.toLowerCase()] || map[base] || map[base.toLowerCase()] || map[norm(name)] || map[norm(base)];
+                if (byName) return byName;
+            }
+            // 4) By NIP
+            const nip = (rec && rec.nip || '').toString().trim();
+            if (nip) {
+                const base = nip.replace(/\.[^.]+$/, '');
+                const byNip = map[nip] || map[nip.toLowerCase()] || map[base] || map[base.toLowerCase()] || map[norm(nip)] || map[norm(base)];
+                if (byNip) return byNip;
+            }
+            return '';
+        }
+
+        updateAllRecordPhotoUrls() {
+            if (!Array.isArray(this.state.batchRecords)) return;
+            this.state.batchRecords = this.state.batchRecords.map(r => ({
+                ...r,
+                photoUrl: this.resolvePhotoForRecord(r, true) || ''
+            }));
+            this.renderBatchPreview();
+            // Jika record yang sedang tampil ada di batch, perbarui fotonya
+            const currentName = (this.elements.nameText && this.elements.nameText.textContent) || '';
+            const currentNip = (this.elements.nipText && this.elements.nipText.textContent || '').replace(/^\s*/, '');
+            const match = this.state.batchRecords.find(rr => (rr.name || '') === currentName || (rr.nip || '') === currentNip);
+            if (match) {
+                this.setFormFromRecord(match);
+                this.updateCard();
+            }
         }
 
         updateTemplateSelection(value) {
@@ -1661,6 +2255,7 @@ updateLogoVisibility();
         }
 
         renderElementsControls() {
+            if (!this.elements || !this.elements.elementsContainer) return;
             const container = this.elements.elementsContainer;
             container.innerHTML = '';
             
@@ -1802,10 +2397,9 @@ updateLogoVisibility();
             const newElement = {
                 id: this.state.nextId++,
                 visible: true,
-                shape: 'circle',
+                shape: this.getRandomShape(),
                 size: 50,
-                x: 200,
-                y: 300,
+                ...this._getRandomPositionAvoidingSafeZone(50),
                 color: `linear-gradient(135deg, ${this.getRandomColor()} 0%, ${this.getRandomColor()} 100%)`
             };
             
@@ -1820,14 +2414,133 @@ updateLogoVisibility();
             return colors[Math.floor(Math.random() * colors.length)];
         }
 
+        getRandomShape() {
+            const shapes = ['circle', 'square', 'triangle', 'hexagon', 'star', 'diamond', 'pentagon', 'heart', 'arrow', 'cross'];
+            return shapes[Math.floor(Math.random() * shapes.length)];
+        }
+
+        _getRandomPositionAvoidingSafeZone(size, maxW = 400, maxH = 600) {
+            // Safe zone approximate area of person image (center 300x350)
+            const safe = { x1: 50, y1: 140, x2: 350, y2: 490 };
+            const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+            for (let tries = 0; tries < 50; tries++) {
+                const x = clamp(Math.floor(Math.random() * (maxW - size + 1)), 0, maxW - size);
+                const y = clamp(Math.floor(Math.random() * (maxH - size + 1)), 0, maxH - size);
+                const left = x, top = y, right = x + size, bottom = y + size;
+                const overlap = !(right < safe.x1 || left > safe.x2 || bottom < safe.y1 || top > safe.y2);
+                if (!overlap) return { x, y };
+            }
+            return { x: 0, y: 0 };
+        }
+
+        randomizeDecorativePositionsOnLoad() {
+            const maxW = 400;
+            const maxH = 600;
+            this.state.decorativeElements.front.forEach(el => {
+                const size = el.size || 50;
+                const pos = this._getRandomPositionAvoidingSafeZone(size, maxW, maxH);
+                el.x = pos.x;
+                el.y = pos.y;
+            });
+        }
+
+        generateRandomElements(count) {
+            const maxW = 400;
+            const maxH = 600;
+            for (let i = 0; i < count; i++) {
+                const size = 30 + Math.floor(Math.random() * 100);
+                const { x, y } = this._getRandomPositionAvoidingSafeZone(size, maxW, maxH);
+                const el = {
+                    id: this.state.nextId++,
+                    visible: true,
+                    shape: this.getRandomShape(),
+                    size,
+                    x,
+                    y,
+                    color: `linear-gradient(135deg, ${this.getRandomColor()} 0%, ${this.getRandomColor()} 100%)`
+                };
+                this.state.decorativeElements.front.push(el);
+            }
+            this.renderElementsControls();
+            this.applyDecorativeStyles();
+            this.showNotification(`${count} elemen acak ditambahkan.`);
+        }
+
+        applyTemplateDefaults(template) {
+            if (template === 'decorative') {
+                this.state.frontBackground = { type: 'color', value: '#f5f7fa' };
+                this.state.decorativeElements.front = this._getDefaultDecorativeElements('decorative');
+                // Tampilkan kembali side bars dan teks jabatan pada tema dekoratif 1
+                if (this.elements.greenSideLeft) this.elements.greenSideLeft.style.display = 'flex';
+                if (this.elements.greenSideRight) this.elements.greenSideRight.style.display = 'flex';
+                if (this.elements.deptTextLeft) this.elements.deptTextLeft.style.display = 'block';
+                if (this.elements.deptTextRight) this.elements.deptTextRight.style.display = 'block';
+                // Re-enable toggle for jabatan on decorative 1
+                if (this.elements.showPositionToggle) {
+                    this.elements.showPositionToggle.disabled = false;
+                }
+            } else if (template === 'decorative2') {
+                this.state.frontBackground = { type: 'color', value: '#eef2ff' };
+                this.state.decorativeElements.front = this._getDefaultDecorativeElements('decorative2');
+                // Selaraskan warna side bar dengan tema
+                this.state.sideBarColor = '#6a11cb';
+                this.applySideBarColor(this.state.sideBarColor);
+                // Sembunyikan tulisan OPERATOR (side bars dan teksnya) pada tema dekoratif 2
+                if (this.elements.greenSideLeft) this.elements.greenSideLeft.style.display = 'none';
+                if (this.elements.greenSideRight) this.elements.greenSideRight.style.display = 'none';
+                if (this.elements.deptTextLeft) this.elements.deptTextLeft.style.display = 'none';
+                if (this.elements.deptTextRight) this.elements.deptTextRight.style.display = 'none';
+                // Auto-aktifkan toggle "Tampilkan Jabatan di Depan"
+                this.state.showPosition = false;
+                if (this.elements.showPositionToggle) {
+                    this.elements.showPositionToggle.checked = false;
+                    this.elements.showPositionToggle.disabled = true;
+                }
+            } else {
+                // Plain: re-enable toggle
+                if (this.elements.showPositionToggle) {
+                    this.elements.showPositionToggle.disabled = false;
+                }
+            }
+            const maxId = this.state.decorativeElements.front.length ? Math.max(...this.state.decorativeElements.front.map(e => e.id)) : 0;
+            this.state.nextId = maxId + 1;
+            this.renderElementsControls();
+            this.updateCard();
+        }
+
+        _getDefaultDecorativeElements(which) {
+            if (which === 'decorative2') {
+                // Tata letak: sudut kiri-atas, kanan-atas, kiri-bawah, kanan-bawah
+                // Palet: biru/ungu/teal yang serasi
+                return [
+                    { id: 1, visible: true, shape: 'hexagon', size: 70, x: 16, y: 24, color: 'linear-gradient(135deg, #6a11cb 0%, #2575fc 100%)' },
+                    { id: 2, visible: true, shape: 'star',    size: 50, x: 322, y: 66, color: 'linear-gradient(135deg, #ffd3a5 0%, #fd6585 100%)' },
+                    { id: 3, visible: true, shape: 'diamond', size: 54, x: 24,  y: 500, color: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)' },
+                    { id: 4, visible: true, shape: 'arrow',   size: 68, x: 312, y: 486, color: 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)' }
+                ];
+            }
+            return [
+                { id: 1, visible: true, shape: 'circle', size: 80, x: 20, y: 20, color: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' },
+                { id: 2, visible: true, shape: 'hexagon', size: 60, x: 320, y: 450, color: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)' }
+            ];
+        }
+
         updateTemplate() {
             const selectedTemplate = document.querySelector('input[name="cardTemplate"]:checked').value;
             this.state.template = selectedTemplate;
             
             if (selectedTemplate === 'decorative') {
-                this.elements.decorativeSection.style.display = 'block';
+                if (this.elements.decorativeSection) this.elements.decorativeSection.style.display = 'block';
+                // Terapkan default untuk template dekoratif
+                this.applyTemplateDefaults('decorative');
+                return;
+            } else if (selectedTemplate === 'decorative2') {
+                if (this.elements.decorativeSection) this.elements.decorativeSection.style.display = 'block';
+                // Terapkan default untuk template dekoratif 2
+                this.applyTemplateDefaults('decorative2');
+                return;
             } else {
-                this.elements.decorativeSection.style.display = 'none';
+                if (this.elements.decorativeSection) this.elements.decorativeSection.style.display = 'none';
             }
             
             this.updateCard();
@@ -1848,25 +2561,35 @@ updateLogoVisibility();
         }
 
         applyDecorativeStyles() {
-            // Clear existing elements
-            this.elements.decorativeCirclesFront.innerHTML = '';
-            this.elements.decorativeCirclesBack.innerHTML = '';
-            
-            // Apply front elements
-            this.state.decorativeElements.front.forEach(element => {
-                if (element.visible) {
-                    const el = this.createElementDOM(element);
-                    this.elements.decorativeCirclesFront.appendChild(el);
-                }
-            });
-            
-            // Apply back elements
-            this.state.decorativeElements.back.forEach(element => {
-                if (element.visible) {
-                    const el = this.createElementDOM(element);
-                    this.elements.decorativeCirclesBack.appendChild(el);
-                }
-            });
+            // Decorative dimatikan: bersihkan kontainer dan keluar
+            if (this.elements.decorativeCirclesFront) this.elements.decorativeCirclesFront.innerHTML = '';
+            if (this.elements.decorativeCirclesBack) this.elements.decorativeCirclesBack.innerHTML = '';
+            return;
+        }
+
+        disableDecorative() {
+            // Kosongkan state elemen dekoratif
+            this.state.decorativeElements.front = [];
+            this.state.decorativeElements.back = [];
+            // Sembunyikan UI kontrol
+            if (this.elements.decorativeSection) this.elements.decorativeSection.style.display = 'none';
+            // Sembunyikan kontainer pada kartu
+            if (this.elements.decorativeCirclesFront) this.elements.decorativeCirclesFront.style.display = 'none';
+            if (this.elements.decorativeCirclesBack) this.elements.decorativeCirclesBack.style.display = 'none';
+            // Bersihkan kontrol
+            if (this.elements.elementsContainer) this.elements.elementsContainer.innerHTML = '';
+        }
+
+        removeDecorativePanel() {
+            const panel = document.getElementById('decorativeSection');
+            if (panel && panel.parentElement) {
+                panel.parentElement.removeChild(panel);
+            }
+            if (this.elements) {
+                this.elements.decorativeSection = null;
+                this.elements.elementsContainer = null;
+                this.elements.addElementBtn = null;
+            }
         }
 
         createElementDOM(element) {
@@ -1958,8 +2681,8 @@ updateLogoVisibility();
                 return;
             }
 
-            if (file.size > 5 * 1024 * 1024) {
-                this.showNotification('Ukuran file maksimal 5MB!', 'error');
+            if (file.size > 10 * 1024 * 1024) {
+                this.showNotification('Ukuran file maksimal 10MB!', 'error');
                 e.target.value = '';
                 return;
             }
@@ -1993,32 +2716,46 @@ updateLogoVisibility();
             const preview = document.getElementById(`${elementType}FontPreview`);
             preview.style.fontFamily = font;
             preview.style.fontSize = `${this.state.fontSizes[elementType]}px`;
+            preview.style.fontWeight = this.state.fontWeights[elementType] ? 'bold' : 'normal';
             
             if (elementType === 'company') {
                 preview.textContent = document.getElementById('companyInput').value || 'UPT SD NEGERI 067953';
             } else if (elementType === 'name') {
                 preview.textContent = document.getElementById('nameInput').value || 'SUGANDI,S.Kom';
             } else if (elementType === 'other') {
-                preview.textContent = document.getElementById('nipInput').value ? `NIP: ${document.getElementById('nipInput').value}` : 'NIP: 1234567890';
+                preview.textContent = document.getElementById('nipInput').value ? `${document.getElementById('nipInput').value}` : '1234567890';
             }
         }
 
         applyFontToCard(elementType, font) {
             if (elementType === 'company') {
                 this.elements.companyName.style.fontFamily = font;
+                this.elements.companyName.style.fontWeight = this.state.fontWeights.company ? 'bold' : 'normal';
                 this.elements.backTitle.style.fontFamily = font;
+                this.elements.backTitle.style.fontWeight = this.state.fontWeights.company ? 'bold' : 'normal';
             } else if (elementType === 'name') {
                 this.elements.nameText.style.fontFamily = font;
+                this.elements.nameText.style.fontWeight = this.state.fontWeights.name ? 'bold' : 'normal';
                 this.elements.backNameDisplay.style.fontFamily = font;
+                this.elements.backNameDisplay.style.fontWeight = this.state.fontWeights.name ? 'bold' : 'normal';
             } else if (elementType === 'other') {
+                const weight = this.state.fontWeights.other ? 'bold' : 'normal';
                 this.elements.nipText.style.fontFamily = font;
+                this.elements.nipText.style.fontWeight = weight;
                 this.elements.backNipDisplay.style.fontFamily = font;
+                this.elements.backNipDisplay.style.fontWeight = weight;
                 this.elements.backEmailDisplay.style.fontFamily = font;
+                this.elements.backEmailDisplay.style.fontWeight = weight;
                 this.elements.backPhoneDisplay.style.fontFamily = font;
+                this.elements.backPhoneDisplay.style.fontWeight = weight;
                 this.elements.backPositionDisplay.style.fontFamily = font;
+                this.elements.backPositionDisplay.style.fontWeight = weight;
                 this.elements.backOfficeDisplay.style.fontFamily = font;
+                this.elements.backOfficeDisplay.style.fontWeight = weight;
                 this.elements.deptTextLeft.style.fontFamily = font;
+                this.elements.deptTextLeft.style.fontWeight = weight;
                 this.elements.deptTextRight.style.fontFamily = font;
+                this.elements.deptTextRight.style.fontWeight = weight;
             }
         }
 
@@ -2047,32 +2784,89 @@ updateLogoVisibility();
             this.elements.greenSideRight.style.background = gradient;
         }
 
-        handleFileUpload(e, type) {
-            const file = e.target.files[0];
-            let label, fileNameSpan;
-
-            switch(type) {
-                case 'logo':
-                    label = document.getElementById('logoLabel');
-                    fileNameSpan = label.querySelector('.file-name');
-                    break;
-                case 'photo':
-                    label = document.getElementById('photoLabel');
-                    fileNameSpan = label.querySelector('.file-name');
-                    break;
-                case 'frontBg':
-                    label = document.getElementById('frontBgLabel');
-                    fileNameSpan = label.querySelector('.file-name');
-                    break;
-                case 'backBg':
-                    label = document.getElementById('backBgLabel');
-                    fileNameSpan = label.querySelector('.file-name');
-                    break;
+        handleXlsxChange(e) {
+            if (typeof XLSX === 'undefined') {
+                this.showNotification('Library XLSX belum dimuat. Periksa koneksi internet.', 'error');
+                return;
             }
+            const file = e.target.files && e.target.files[0];
+            const label = this.elements.xlsxLabel;
+            const nameSpan = label ? label.querySelector('.file-name') : null;
 
             if (!file) {
-                fileNameSpan.textContent = `Pilih file ${type}...`;
-                label.classList.remove('has-file');
+                if (nameSpan) nameSpan.textContent = 'Pilih file XLSX...';
+                if (label) label.classList.remove('has-file');
+                this.state.batchRecords = [];
+                return;
+            }
+
+            if (nameSpan) nameSpan.textContent = file.name;
+            if (label) label.classList.add('has-file');
+
+            const reader = new FileReader();
+            const isCsv = file.name.toLowerCase().endsWith('.csv');
+            reader.onload = (evt) => {
+                try {
+                    let wb;
+                    if (isCsv) {
+                        const text = evt.target.result;
+                        wb = XLSX.read(text, { type: 'string' });
+                    } else {
+                        const data = new Uint8Array(evt.target.result);
+                        wb = XLSX.read(data, { type: 'array' });
+                    }
+                    const ws = wb.Sheets[wb.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+                    const mapRow = (r) => ({
+                        name: r['Name'] ?? r['Nama'] ?? r['Full Name'] ?? r['FN'] ?? r['Nama Lengkap'] ?? r['nama'] ?? r['name'] ?? '',
+                        nip: r['NIP'] ?? r['nip'] ?? r['Id'] ?? r['ID'] ?? '',
+                        email: r['Email'] ?? r['email'] ?? '',
+                        phone: r['Phone'] ?? r['Telepon'] ?? r['HP'] ?? r['phone'] ?? '',
+                        position: r['Position'] ?? r['Jabatan'] ?? r['position'] ?? r['jabatan'] ?? '',
+                        office: r['Office'] ?? r['Kantor'] ?? r['office'] ?? r['kantor'] ?? '',
+                        company: r['Company'] ?? r['Perusahaan'] ?? r['company'] ?? r['perusahaan'] ?? '',
+                        photoUrl: r['Photo'] ?? r['photo'] ?? '',
+                        photoFile: r['PhotoFile'] ?? r['photoFile'] ?? r['photofile'] ?? r['FotoFile'] ?? r['foto'] ?? ''
+                    });
+                    this.state.batchRecords = rows.map(mapRow).map(r => ({
+                        ...r,
+                        photoUrl: r.photoUrl || this.resolvePhotoForRecord(r) || ''
+                    }));
+                    this.renderBatchPhotosGallery();
+                    this.renderBatchPreview();
+                    // Apply any pending per-record settings from imported JSON
+                    if (Array.isArray(this.state.pendingRecordSettings) && this.state.pendingRecordSettings.length > 0) {
+                        this.applyPerRecordSettings(this.state.pendingRecordSettings);
+                        this.state.pendingRecordSettings = null;
+                    }
+                    this.showNotification(`Berhasil memuat ${this.state.batchRecords.length} data dari ${isCsv ? 'CSV' : 'XLSX'}.`);
+                } catch (err) {
+                    console.error(err);
+                    this.showNotification(`Gagal membaca file ${isCsv ? 'CSV' : 'XLSX'}.`, 'error');
+                }
+            };
+            if (isCsv) reader.readAsText(file);
+            else reader.readAsArrayBuffer(file);
+        }
+
+        handleFileUpload(e, type) {
+            const file = e.target.files && e.target.files[0];
+            let label = null;
+            let fileNameSpan = null;
+            if (type === 'logo') {
+                label = document.getElementById('logoLabel');
+            } else if (type === 'photo') {
+                label = document.getElementById('photoLabel');
+            } else if (type === 'frontBg') {
+                label = document.getElementById('frontBgLabel');
+            } else if (type === 'backBg') {
+                label = document.getElementById('backBgLabel');
+            }
+            if (label) fileNameSpan = label.querySelector('.file-name');
+
+            if (!file) {
+                if (fileNameSpan) fileNameSpan.textContent = `Pilih file ${type}...`;
+                if (label) label.classList.remove('has-file');
                 if (type === 'logo') this.state.logoUrl = null;
                 if (type === 'photo') this.state.photoUrl = null;
                 if (type === 'frontBg') this.state.frontBackground = { type: 'color', value: this.elements.frontBgColorInput.value };
@@ -2086,7 +2880,6 @@ updateLogoVisibility();
                 e.target.value = '';
                 return;
             }
-
             if (file.size > 5 * 1024 * 1024) {
                 this.showNotification('Ukuran file maksimal 5MB!', 'error');
                 e.target.value = '';
@@ -2104,12 +2897,15 @@ updateLogoVisibility();
                     this.displayPhoto(url);
                 } else if (type === 'frontBg') {
                     this.state.frontBackground = { type: 'image', value: url };
+                    const r = document.getElementById('frontBgImage');
+                    if (r) { r.checked = true; this.toggleBackgroundOption('front'); }
                 } else if (type === 'backBg') {
                     this.state.backBackground = { type: 'image', value: url };
+                    const r = document.getElementById('backBgImage');
+                    if (r) { r.checked = true; this.toggleBackgroundOption('back'); }
                 }
-                fileNameSpan.textContent = file.name;
-                label.classList.add('has-file');
-                this.showNotification(`Background ${type === 'frontBg' ? 'depan' : 'belakang'} berhasil diupload!`);
+                if (fileNameSpan) fileNameSpan.textContent = file.name;
+                if (label) label.classList.add('has-file');
                 this.updateCard();
             };
             reader.readAsDataURL(file);
@@ -2142,7 +2938,7 @@ updateLogoVisibility();
         }
 
         displayPhoto(url) {
-            this.elements.personImg.src = url || 'https://picsum.photos/seed/person-placeholder/300/350.jpg';
+            this.elements.personImg.src = url || 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCg0KPCFET0NUWVBFIHN2ZyBQVUJMSUMgIi0vL1czQy8vRFREIFNWRyAxLjEvL0VOIiAiaHR0cDovL3d3dy53My5vcmcvR3JhcGhpY3MvU1ZHLzEuMS9EVEQvc3ZnMTEuZHRkIj4NCjwhLS0gVXBsb2FkZWQgdG86IFNWRyBSZXBvLCB3d3cuc3ZncmVwby5jb20sIEdlbmVyYXRvcjogU1ZHIFJlcG8gTWl4ZXIgVG9vbHMgLS0+DQo8c3ZnIGhlaWdodD0iODAwcHgiIHdpZHRoPSI4MDBweCIgdmVyc2lvbj0iMS4xIiBpZD0iX3gzMl8iIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIA0KCSB2aWV3Qm94PSIwIDAgNTEyIDUxMiIgIHhtbDpzcGFjZT0icHJlc2VydmUiPg0KPHN0eWxlIHR5cGU9InRleHQvY3NzIj4NCgkuc3Qwe2ZpbGw6IzAwMDAwMDt9DQo8L3N0eWxlPg0KPGc+DQoJPHBhdGggY2xhc3M9InN0MCIgZD0iTTM2NC4wMzIsMzU1LjAzNWMtMy44NjItMS40NDYtOC4wNzItMy40MzYtMTIuMzUtNS43OTRsLTcxLjU3LDk4LjkzNWwtNS4wOS02NC44MTRoLTM4LjAzM2wtNS4wOTEsNjQuODE0DQoJCWwtNzEuNTY5LTk4LjkzNWMtNC40MDgsMi40NjYtOC42NTYsNC40ODctMTIuMzYxLDUuNzk0Yy0zNy40NzgsMTMuMTkzLTEyOS41NDksNTEuMTM2LTEyMy42MDcsMTIyLjIxDQoJCUMyNS43ODcsNDk0LjMwMSwxMTkuNTgyLDUxMiwyNTYuMDA2LDUxMmMxMzYuNDEzLDAsMjMwLjIwOC0xNy42OTksMjMxLjYzNC0zNC43NTUNCgkJQzQ5My41ODMsNDA2LjEwMiw0MDEuMjczLDM2OC45NjEsMzY0LjAzMiwzNTUuMDM1eiIvPg0KCTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik0xNzEuNTAxLDIwOC4yNzFjNS4yMSwyOS41MTYsMTMuOTY2LDU1LjU1NCwyNS40OTQsNjguMzhjMCwxNS4zODIsMCwyNi42MDQsMCwzNS41ODcNCgkJYzAsMC45MDItMC4xNTgsMS44NTItMC40MTYsMi44MzNsNDAuNDEsMTkuNDYydjI4LjU0NWgzOC4wMzN2LTI4LjU0NWw0MC4zOS0xOS40NTJjLTAuMjU4LTAuOTgxLTAuNDE2LTEuOTMyLTAuNDE2LTIuODQzDQoJCWMwLTguOTgzLDAtMjAuMjA1LDAtMzUuNTg3YzExLjU0OC0xMi44MjYsMjAuMzA0LTM4Ljg2NCwyNS41MTQtNjguMzhjMTIuMTQzLTQuMzM4LDE5LjA5Ni0xMS4yODEsMjcuNzYyLTQxLjY1OA0KCQljOS4yMzEtMzIuMzU4LTEzLjg3Ni0zMS4yNTgtMTMuODc2LTMxLjI1OGMxOC42OS02MS44NzMtNS45MjItMTIwLjAyMi00Ny4xMjQtMTE1Ljc1M2MtMjguNDI2LTQ5LjczLTEyMy42MjcsMTEuMzYtMTUzLjQ4LDcuMTAyDQoJCWMwLDE3LjA1NSw3LjExMiwyOS44NDIsNy4xMTIsMjkuODQyYy0xMC4zNzksMTkuNjktNi4zNzgsNTguOTUxLTMuNDQ2LDc4LjgwOWMtMS43MDQtMC4wMy0yMi42MDIsMC4xODgtMTMuNzI4LDMxLjI1OA0KCQlDMTUyLjQwNSwxOTYuOTksMTU5LjMzOCwyMDMuOTM0LDE3MS41MDEsMjA4LjI3MXoiLz4NCjwvZz4NCjwvc3ZnPg==';
         }
 
         updateCard() {
@@ -2150,29 +2946,64 @@ updateLogoVisibility();
             
             // Update Template Classes
             this.elements.cardFront.className = `card-face card-front card-front-${this.state.template}`;
+            // Pastikan jabatan (OPERATOR) dihilangkan pada tema dekoratif 2
+            if (this.state.template === 'decorative2') {
+                if (this.elements.greenSideLeft) this.elements.greenSideLeft.style.display = 'none';
+                if (this.elements.greenSideRight) this.elements.greenSideRight.style.display = 'none';
+                if (this.elements.deptTextLeft) this.elements.deptTextLeft.style.display = 'none';
+                if (this.elements.deptTextRight) this.elements.deptTextRight.style.display = 'none';
+            } else if (this.state.template === 'decorative') {
+                if (this.elements.greenSideLeft) this.elements.greenSideLeft.style.display = 'flex';
+                if (this.elements.greenSideRight) this.elements.greenSideRight.style.display = 'flex';
+                if (this.elements.deptTextLeft) this.elements.deptTextLeft.style.display = 'block';
+                if (this.elements.deptTextRight) this.elements.deptTextRight.style.display = 'block';
+            }
             this.elements.cardBack.className = `card-face card-back`;
             
             // Update Backgrounds
             if (this.state.frontBackground.type === 'image') {
-                this.elements.cardFront.style.backgroundImage = `url(${this.state.frontBackground.value})`;
-                this.elements.cardFront.style.backgroundSize = 'cover';
-                this.elements.cardFront.style.backgroundPosition = 'center';
+                const url = this.state.frontBackground.value;
+                // Stretch agar memenuhi seluruh kartu
+                this.elements.cardFront.style.setProperty('background', `url(${url}) 0 0 / 100% 100% no-repeat`, 'important');
+                this.elements.cardFront.style.setProperty('background-image', `url(${url})`, 'important');
+                this.elements.cardFront.style.setProperty('background-size', '100% 100%', 'important');
+                this.elements.cardFront.style.setProperty('background-position', '0 0', 'important');
+                this.elements.cardFront.style.setProperty('background-repeat', 'no-repeat', 'important');
+                // Header/Footer transparan agar gambar terlihat
+                const header = this.elements.cardFront.querySelector('.card-header');
+                const footer = this.elements.cardFront.querySelector('.card-footer');
+                if (header) header.style.background = 'transparent';
+                if (footer) footer.style.background = 'transparent';
             } else {
                 this.elements.cardFront.style.backgroundImage = 'none';
-                if (this.state.template === 'plain') {
-                    this.elements.cardFront.style.backgroundColor = this.state.frontBackground.value;
-                } else {
-                    this.elements.cardFront.style.background = 'var(--light-gradient)';
-                }
+                this.elements.cardFront.style.background = 'none';
+                this.elements.cardFront.style.backgroundColor = this.state.frontBackground.value;
+                // Pulihkan header/footer (tanpa memaksa warna), biarkan CSS default berjalan
+                const header = this.elements.cardFront.querySelector('.card-header');
+                const footer = this.elements.cardFront.querySelector('.card-footer');
+                if (header) header.style.background = '';
+                if (footer) footer.style.background = '';
             }
 
             if (this.state.backBackground.type === 'image') {
-                this.elements.cardBack.style.backgroundImage = `url(${this.state.backBackground.value})`;
-                this.elements.cardBack.style.backgroundSize = 'cover';
-                this.elements.cardBack.style.backgroundPosition = 'center';
+                const urlB = this.state.backBackground.value;
+                this.elements.cardBack.style.setProperty('background', `url(${urlB}) 0 0 / 100% 100% no-repeat`, 'important');
+                this.elements.cardBack.style.setProperty('background-image', `url(${urlB})`, 'important');
+                this.elements.cardBack.style.setProperty('background-size', '100% 100%', 'important');
+                this.elements.cardBack.style.setProperty('background-position', '0 0', 'important');
+                this.elements.cardBack.style.setProperty('background-repeat', 'no-repeat', 'important');
+                const headerB = this.elements.cardBack.querySelector('.card-header');
+                const footerB = this.elements.cardBack.querySelector('.card-footer');
+                if (headerB) headerB.style.background = 'transparent';
+                if (footerB) footerB.style.background = 'transparent';
             } else {
                 this.elements.cardBack.style.backgroundImage = 'none';
+                this.elements.cardBack.style.background = 'none';
                 this.elements.cardBack.style.backgroundColor = this.state.backBackground.value;
+                const headerB = this.elements.cardBack.querySelector('.card-header');
+                const footerB = this.elements.cardBack.querySelector('.card-footer');
+                if (headerB) headerB.style.background = '';
+                if (footerB) footerB.style.background = '';
             }
             
             // Show/hide decorative elements based on template (hanya untuk depan)
@@ -2209,7 +3040,7 @@ updateLogoVisibility();
             
             // Handle NIP display
             if (data.nip) {
-                this.elements.nipText.textContent = `NIP: ${data.nip}`;
+                this.elements.nipText.textContent = `${data.nip}`;
                 this.elements.nipText.classList.add('show');
             } else {
                 this.elements.nipText.classList.remove('show');
@@ -2217,7 +3048,7 @@ updateLogoVisibility();
 
             // Update Back Card
             this.elements.backNameDisplay.textContent = data.name;
-            this.elements.backNipDisplay.textContent = data.nip ? `NIP ${data.nip}` : '';
+            this.elements.backNipDisplay.textContent = data.nip ? `${data.nip}` : '';
             this.elements.backNipDisplay.style.display = data.nip ? 'block' : 'none';
             this.elements.backEmailDisplay.textContent = data.email;
             this.elements.backPhoneDisplay.textContent = data.phone.replace(/-/g, ' - ');
@@ -2252,8 +3083,34 @@ updateLogoVisibility();
                 this.applySideBarColor(this.state.sideBarColor);
             }
             
+            // Apply person image position (object-position with cover) + zoom (X fixed to center)
+            if (this.elements.personImg) {
+                const img = this.elements.personImg;
+                const container = img.parentElement;
+                if (container) container.style.overflow = 'hidden';
+                const y = (this.state.photoPosition && this.state.photoPosition.y) ?? 50;
+                const x = 50; // lock horizontal center
+                const zoom = this.state.photoZoom ?? 100;
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.objectFit = 'cover';
+                img.style.objectPosition = `${x}% ${y}%`;
+                img.style.transform = `scale(${zoom/100})`;
+                img.style.transformOrigin = `${x}% ${y}%`;
+            }
+
+            // Update position value labels
+            const posXVal = document.getElementById('personPosXValue');
+            const posYVal = document.getElementById('personPosYValue');
+            if (posXVal) posXVal.textContent = `${this.state.photoPosition.x}%`;
+            if (posYVal) posYVal.textContent = `${this.state.photoPosition.y}%`;
+            const zoomVal = document.getElementById('personZoomValue');
+            if (zoomVal) zoomVal.textContent = `${this.state.photoZoom ?? 100}%`;
+
             // Generate QR Code
             this.generateQRCode(data);
+            // Auto-save settings to current record if any
+            this.saveCurrentSettingsToRecord();
         }
 
         getFormData() {
@@ -2270,7 +3127,7 @@ updateLogoVisibility();
         }
 
         generateQRCode(data) {
-            const vcardData = `${data.name}\n${data.nip}\n${data.company}\n${data.position}\n${data.phone}\n${data.email}\n${data.office}\n`;
+            const vcardData = `${data.name}\n${data.nip}\n${data.position}\n${data.company}\n${data.phone}\n${data.email}\n${data.office}\n`;
             
             this.elements.qrcode.innerHTML = '';
             new QRCode(this.elements.qrcode, {
@@ -2314,40 +3171,9 @@ updateLogoVisibility();
             this.state.sideBarColor = '#11998e';
             this.state.showPosition = true; // Reset toggle jabatan
             
-            // Reset decorative elements
-            this.state.decorativeElements = {
-                front: [
-                    {
-                        id: 1,
-                        visible: true,
-                        shape: 'circle',
-                        size: 80,
-                        x: 20,
-                        y: 20,
-                        color: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
-                    },
-                    {
-                        id: 2,
-                        visible: true,
-                        shape: 'circle',
-                        size: 60,
-                        x: 320,
-                        y: 450,
-                        color: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)'
-                    },
-                    {
-                        id: 3,
-                        visible: true,
-                        shape: 'circle',
-                        size: 40,
-                        x: 350,
-                        y: 20,
-                        color: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)'
-                    }
-                ],
-                back: []
-            };
-            this.state.nextId = 4;
+            // Decorative elements dimatikan: kosongkan
+            this.state.decorativeElements = { front: [], back: [] };
+            this.state.nextId = 1;
             
             // Reset UI
             this.displayLogo(null);
@@ -2381,23 +3207,22 @@ updateLogoVisibility();
             }
             
             // Reset layout adjustments
-            document.querySelector('.card-header').style.padding = '';
-            document.querySelector('.card-footer').style.padding = '';
-            document.querySelector('.back-info').style.gap = '';
+            const hdr = document.querySelector('.card-header'); if (hdr) hdr.style.padding = '';
+            const ftr = document.querySelector('.card-footer'); if (ftr) ftr.style.padding = '';
+            const bi = document.querySelector('.back-info'); if (bi) bi.style.gap = '';
             
             // Reset background controls
-            document.querySelector('input[name="frontBgType"][value="color"]').checked = true;
-            document.querySelector('input[name="backBgType"][value="color"]').checked = true;
+            const frColor = document.querySelector('input[name="frontBgType"][value="color"]'); if (frColor) frColor.checked = true;
+            const bkColor = document.querySelector('input[name="backBgType"][value="color"]'); if (bkColor) bkColor.checked = true;
             this.toggleBackgroundOption('front');
             this.toggleBackgroundOption('back');
 
             // Reset template control
-            document.querySelector('input[name="cardTemplate"][value="decorative"]').checked = true;
+            const tmplDecor = document.querySelector('input[name="cardTemplate"][value="decorative"]'); if (tmplDecor) tmplDecor.checked = true;
             this.updateTemplateSelection('decorative');
-            this.elements.decorativeSection.style.display = 'block';
+            if (this.elements.decorativeSection) this.elements.decorativeSection.style.display = 'block';
             
-            // Re-render elements controls
-            this.renderElementsControls();
+            // Tidak ada elemen dekoratif untuk dirender
             
             this.updateCard();
             this.showNotification('Kartu direset ke default');
@@ -2413,6 +3238,7 @@ updateLogoVisibility();
         const nameInput = document.getElementById('nameInput');
         const nipInput = document.getElementById('nipInput');
         // const positionInput = const positionInput = document.getElementById('positionInput');
+        const positionInput = document.getElementById('positionInput');
         const emailInput = document.getElementById('emailInput');
         const phoneInput = document.getElementById('phoneInput');
         const officeInput = document.getElementById('officeInput');
@@ -2447,17 +3273,32 @@ updateLogoVisibility();
             // Font Settings
             fonts: this.state.fonts,
             fontSizes: this.state.fontSizes,
+            fontWeights: this.state.fontWeights,
             
             // Decorative Elements
             decorativeElements: this.state.decorativeElements,
             
+            // Photo & QR
+            photoPosition: { ...this.state.photoPosition },
+            photoZoom: this.state.photoZoom,
+            photoOriginalSize: !!this.state.photoOriginalSize,
+            photoAllowOverflow: !!this.state.photoAllowOverflow,
+            
             // Images (base64)
             logoUrl: this.state.logoUrl,
             photoUrl: this.state.photoUrl,
+            // Per-record settings (optional)
+            records: (Array.isArray(this.state.batchRecords) ? this.state.batchRecords : [])
+                .filter(r => r && r._settings)
+                .map(r => ({
+                    name: r.name || '',
+                    nip: r.nip || '',
+                    settings: r._settings
+                })),
             
             // Metadata
             exportDate: new Date().toISOString(),
-            version: '1.0'
+            version: '1.1'
         };
         
         // Konversi ke JSON string
@@ -2500,8 +3341,8 @@ updateLogoVisibility();
     }
     
     // Validasi ukuran file (maks 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-        this.showNotification('❌ Ukuran file maksimal 5MB!', 'error');
+    if (file.size > 10 * 1024 * 1024) {
+        this.showNotification('❌ Ukuran file maksimal 10MB!', 'error');
         event.target.value = '';
         return;
     }
@@ -2517,8 +3358,8 @@ updateLogoVisibility();
                 throw new Error('File setting tidak valid atau korup');
             }
             
-            // Validasi versi
-            if (settings.version !== '1.0') {
+            // Validasi versi (mendukung 1.0 dan 1.1)
+            if (settings.version && !['1.0','1.1'].includes(settings.version)) {
                 throw new Error('Versi file tidak kompatibel');
             }
             
@@ -2527,8 +3368,12 @@ updateLogoVisibility();
                 throw new Error('File setting tidak lengkap (nama dan perusahaan harus ada)');
             }
             
-            // Terapkan setting
+            // Terapkan setting umum
             this.applySettings(settings);
+            // Terapkan setting per-record jika ada
+            if (Array.isArray(settings.records) && settings.records.length > 0) {
+                this.applyPerRecordSettings(settings.records);
+            }
             
             this.showNotification('✅ Setting berhasil diimport!');
             
@@ -2694,6 +3539,29 @@ updateLogoVisibility();
                 }
             }
         }
+        // Apply Font Weights (bold flags)
+        if (settings.fontWeights) {
+            this.state.fontWeights = {
+                company: settings.fontWeights.company ?? this.state.fontWeights.company,
+                name: settings.fontWeights.name ?? this.state.fontWeights.name,
+                other: settings.fontWeights.other ?? this.state.fontWeights.other
+            };
+
+            if (this.elements.companyFontBoldToggle) {
+                this.elements.companyFontBoldToggle.checked = !!this.state.fontWeights.company;
+            }
+            if (this.elements.nameFontBoldToggle) {
+                this.elements.nameFontBoldToggle.checked = !!this.state.fontWeights.name;
+            }
+            if (this.elements.otherFontBoldToggle) {
+                this.elements.otherFontBoldToggle.checked = !!this.state.fontWeights.other;
+            }
+
+            // Re-apply fonts so font-weight changes ikut ke kartu
+            this.applyFontToCard('company', this.state.fonts.company);
+            this.applyFontToCard('name', this.state.fonts.name);
+            this.applyFontToCard('other', this.state.fonts.other);
+        }
         
         if (settings.fontSizes) {
             this.state.fontSizes = settings.fontSizes;
@@ -2748,6 +3616,39 @@ updateLogoVisibility();
             this.displayPhoto(settings.photoUrl);
         }
         
+        // Apply photo settings
+        if (settings.photoPosition) {
+            this.state.photoPosition = settings.photoPosition;
+            const xEl = document.getElementById('personPosXInput');
+            const yEl = document.getElementById('personPosYInput');
+            if (xEl) xEl.value = String(this.state.photoPosition.x);
+            if (yEl) yEl.value = String(this.state.photoPosition.y);
+            const posXVal = document.getElementById('personPosXValue');
+            const posYVal = document.getElementById('personPosYValue');
+            if (posXVal) posXVal.textContent = `${this.state.photoPosition.x}%`;
+            if (posYVal) posYVal.textContent = `${this.state.photoPosition.y}%`;
+        }
+        
+        if (settings.photoZoom) {
+            this.state.photoZoom = settings.photoZoom;
+            const zEl = document.getElementById('personZoomInput');
+            if (zEl) zEl.value = String(this.state.photoZoom);
+            const zVal = document.getElementById('personZoomValue');
+            if (zVal) zVal.textContent = `${this.state.photoZoom}%`;
+        }
+        
+        if (settings.photoOriginalSize !== undefined) {
+            this.state.photoOriginalSize = settings.photoOriginalSize;
+            const oEl = document.getElementById('personOriginalSizeToggle');
+            if (oEl) oEl.checked = this.state.photoOriginalSize;
+        }
+        
+        if (settings.photoAllowOverflow !== undefined) {
+            this.state.photoAllowOverflow = settings.photoAllowOverflow;
+            const ofEl = document.getElementById('personOverflowToggle');
+            if (ofEl) ofEl.checked = this.state.photoAllowOverflow;
+        }
+        
         // Update card dengan semua setting baru
         this.updateCard();
         
@@ -2762,10 +3663,50 @@ updateLogoVisibility();
     }
 }
 
+        applyPerRecordSettings(records) {
+    try {
+        if (!Array.isArray(records) || records.length === 0) {
+            return;
+        }
+
+        // Jika data batch belum dimuat, simpan dulu sebagai pending
+        if (!Array.isArray(this.state.batchRecords) || this.state.batchRecords.length === 0) {
+            this.state.pendingRecordSettings = records;
+            return;
+        }
+
+        const norm = (v) => (v || '').toString().trim().toLowerCase();
+
+        records.forEach((rec) => {
+            const keyNip = norm(rec.nip);
+            const keyName = norm(rec.name);
+            const settingData = rec.settings;
+            if (!settingData) return;
+
+            const target = this.state.batchRecords.find((r) => {
+                const nipMatch = keyNip && norm(r.nip) === keyNip;
+                const nameMatch = !nipMatch && keyName && norm(r.name) === keyName;
+                return nipMatch || nameMatch;
+            });
+
+            if (target) {
+                target._settings = settingData;
+            }
+        });
+
+        // Setelah tersambung dengan batchRecords, perbarui preview
+        this.renderBatchPreview();
+    } catch (error) {
+        console.error('applyPerRecordSettings error:', error);
+        this.showNotification('❌ Gagal menerapkan setting per-record: ' + error.message, 'error');
+    }
+}
+
         // ============================================
         // DOWNLOAD & CANVAS LOGIC
         // ============================================
         async downloadCard(side) {
+            side = side || 'front';
             const sideText = side === 'front' ? 'Depan' : side === 'back' ? 'Belakang' : 'Kedua Sisi';
             this.showLoading(`Mengunduh sisi ${sideText}...`, true);
             this.updateProgress(5);
@@ -2796,6 +3737,7 @@ updateLogoVisibility();
         }
 
         async _downloadSingleSide(side) {
+            side = side || 'front';
             // Simpan state asli
             const originalState = this.state.isFlipped;
             
@@ -2814,36 +3756,58 @@ updateLogoVisibility();
             if (!originalSide) {
                 throw new Error(`Elemen card${side.charAt(0).toUpperCase() + side.slice(1)} tidak ditemukan`);
             }
-            
-            // Buat container sementara
-            const tempContainer = document.createElement('div');
-            tempContainer.style.cssText = `
-                position: absolute;
-                left: -9999px;
-                top: 0;
-                width: 400px;
-                height: 600px;
-                background: #ffffff;
-                border-radius: 20px;
-                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-                overflow: hidden;
-            `;
-            
-            // Clone sisi yang dimaksud
-            const clone = originalSide.cloneNode(true);
-            
-            // Terapkan semua perbaikan
-            this._fixClonedCard(clone, side);
-            
-            tempContainer.appendChild(clone);
-            document.body.appendChild(tempContainer);
+            // Pastikan semua gambar pada elemen asli sudah siap
+            await this._waitForImages(originalSide);
             this.updateProgress(30);
 
-            // Tunggu rendering
-            await new Promise(resolve => setTimeout(resolve, 500));
+            // Sedikit jeda untuk layout stabil
+            await new Promise(resolve => setTimeout(resolve, 20));
+
+            // Render langsung elemen yang terlihat di layar agar hasil identik
+            const canvas = await html2canvas(originalSide, {
+                scale: 1.25,
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: null,
+                logging: false,
+                width: 400,
+                height: 600,
+            });
             
-            const canvas = await html2canvas(tempContainer, {
-                scale: 2,
+            // Kembalikan state asli
+            if (originalState !== this.state.isFlipped) {
+                this.flipCard();
+            }
+            
+            return canvas;
+        }
+
+        async _createSideCanvasClone(side) {
+            side = side || 'front';
+            const originalState = this.state.isFlipped;
+            if ((side === 'front' && this.state.isFlipped) || (side === 'back' && !this.state.isFlipped)) {
+                this.flipCard();
+            }
+            await new Promise(r => setTimeout(r, 60));
+
+            const originalSide = document.getElementById(`card${side.charAt(0).toUpperCase() + side.slice(1)}`);
+            const clone = this._cloneCardSideForDownload(originalSide, side);
+
+            const temp = document.createElement('div');
+            temp.style.position = 'absolute';
+            temp.style.left = '-9999px';
+            temp.style.top = '0';
+            temp.style.width = '400px';
+            temp.style.height = '600px';
+            temp.style.background = '#ffffff';
+            temp.appendChild(clone);
+            document.body.appendChild(temp);
+
+            await this._waitForImages(temp);
+            await new Promise(r => setTimeout(r, 80));
+
+            const canvas = await html2canvas(temp, {
+                scale: 1.25,
                 useCORS: true,
                 allowTaint: true,
                 backgroundColor: '#ffffff',
@@ -2852,14 +3816,379 @@ updateLogoVisibility();
                 height: 600,
             });
 
-            document.body.removeChild(tempContainer);
-            
-            // Kembalikan state asli
-            if (originalState !== this.state.isFlipped) {
-                this.flipCard();
-            }
-            
+            document.body.removeChild(temp);
+            if (originalState !== this.state.isFlipped) this.flipCard();
             return canvas;
+        }
+
+        _waitForImages(root) {
+            const timeoutMs = 8000;
+            const imgs = Array.from(root.querySelectorAll('img'));
+            const imgPromises = imgs.map(img => {
+                if (img.complete && img.naturalWidth !== 0) return Promise.resolve();
+                return new Promise(resolve => {
+                    let settled = false;
+                    const done = () => { if (settled) return; settled = true; img.removeEventListener('load', done); img.removeEventListener('error', done); resolve(); };
+                    const t = setTimeout(done, timeoutMs);
+                    const wrapped = () => { clearTimeout(t); done(); };
+                    img.addEventListener('load', wrapped, { once: true });
+                    img.addEventListener('error', wrapped, { once: true });
+                });
+            });
+
+            // Also attempt to preload CSS background images
+            const elements = Array.from(root.querySelectorAll('*'));
+            const bgPromises = elements.map(el => {
+                const cs = getComputedStyle(el);
+                const bg = cs.backgroundImage || '';
+                if (!bg || bg === 'none') return Promise.resolve();
+                const urls = Array.from(bg.matchAll(/url\(("|'|)(.*?)\1\)/g)).map(m => m[2]).filter(Boolean);
+                if (!urls.length) return Promise.resolve();
+                return Promise.all(urls.map(u => new Promise(res => {
+                    const im = new Image();
+                    im.crossOrigin = 'anonymous';
+                    const to = setTimeout(() => res(), timeoutMs);
+                    im.onload = () => { clearTimeout(to); res(); };
+                    im.onerror = () => { clearTimeout(to); res(); };
+                    im.src = u;
+                })));
+            });
+
+            // Global safety timeout
+            const all = Promise.all([...imgPromises, ...bgPromises]);
+            return Promise.race([
+                all,
+                new Promise(res => setTimeout(res, timeoutMs))
+            ]);
+        }
+
+        // ===== Helpers for Batch Export =====
+        _withTimeout(promise, ms, label = 'operation') {
+            let timeoutId;
+            const timeout = new Promise((_, reject) => {
+                timeoutId = setTimeout(() => reject(new Error(`${label} timeout after ${ms}ms`)), ms);
+            });
+            return Promise.race([promise.finally(() => clearTimeout(timeoutId)), timeout]);
+        }
+
+        canvasToBlob(canvas) {
+            return new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+        }
+
+        getFormSnapshot() {
+            return {
+                company: document.getElementById('companyInput')?.value || '',
+                name: document.getElementById('nameInput')?.value || '',
+                nip: document.getElementById('nipInput')?.value || '',
+                email: document.getElementById('emailInput')?.value || '',
+                phone: document.getElementById('phoneInput')?.value || '',
+                position: document.getElementById('positionInput')?.value || '',
+                office: document.getElementById('officeInput')?.value || ''
+            };
+        }
+
+        getSettingsSnapshot() {
+            return {
+                template: this.state.template,
+                frontBackground: this.state.frontBackground,
+                backBackground: this.state.backBackground,
+                fonts: { ...this.state.fonts },
+                fontSizes: { ...this.state.fontSizes },
+                sideBarColor: this.state.sideBarColor,
+                showPosition: this.state.showPosition,
+                photoPosition: { ...this.state.photoPosition },
+                photoZoom: this.state.photoZoom
+            };
+        }
+
+        applySettingsSnapshot(s) {
+            try {
+                if (!s || typeof s !== 'object') return;
+                // Template
+                if (s.template) {
+                    this.state.template = s.template;
+                    const r = document.querySelector(`input[name="cardTemplate"][value="${s.template}"]`);
+                    if (r) {
+                        r.checked = true;
+                        this.updateTemplateSelection(s.template);
+                    }
+                }
+                // Backgrounds
+                if (s.frontBackground) {
+                    this.state.frontBackground = s.frontBackground;
+                    const r = document.querySelector(`input[name="frontBgType"][value="${s.frontBackground.type}"]`);
+                    if (r) r.checked = true;
+                    if (s.frontBackground.type === 'color' && this.elements.frontBgColorInput) this.elements.frontBgColorInput.value = s.frontBackground.value;
+                    this.toggleBackgroundOption('front');
+                }
+                if (s.backBackground) {
+                    this.state.backBackground = s.backBackground;
+                    const r = document.querySelector(`input[name="backBgType"][value="${s.backBackground.type}"]`);
+                    if (r) r.checked = true;
+                    if (s.backBackground.type === 'color' && this.elements.backBgColorInput) this.elements.backBgColorInput.value = s.backBackground.value;
+                    this.toggleBackgroundOption('back');
+                }
+                // Fonts
+                if (s.fonts) {
+                    this.state.fonts = { ...this.state.fonts, ...s.fonts };
+                    if (this.elements.companyFontSelect && s.fonts.company) this.elements.companyFontSelect.value = s.fonts.company;
+                    if (this.elements.nameFontSelect && s.fonts.name) this.elements.nameFontSelect.value = s.fonts.name;
+                    if (this.elements.otherFontSelect && s.fonts.other) this.elements.otherFontSelect.value = s.fonts.other;
+                }
+                // Font sizes
+                if (s.fontSizes) {
+                    this.state.fontSizes = { ...this.state.fontSizes, ...s.fontSizes };
+                    if (this.elements.companyFontSizeInput && s.fontSizes.company) {
+                        this.elements.companyFontSizeInput.value = String(s.fontSizes.company);
+                        this.elements.companyFontSizeValue.textContent = `${s.fontSizes.company}px`;
+                    }
+                    if (this.elements.nameFontSizeInput && s.fontSizes.name) {
+                        this.elements.nameFontSizeInput.value = String(s.fontSizes.name);
+                        this.elements.nameFontSizeValue.textContent = `${s.fontSizes.name}px`;
+                    }
+                    if (this.elements.otherFontSizeInput && s.fontSizes.other) {
+                        this.elements.otherFontSizeInput.value = String(s.fontSizes.other);
+                        this.elements.otherFontSizeValue.textContent = `${s.fontSizes.other}px`;
+                    }
+                }
+                // Side bar color
+                if (typeof s.sideBarColor === 'string') {
+                    this.state.sideBarColor = s.sideBarColor;
+                    const input = document.getElementById('sideBarColorInput');
+                    if (input) input.value = s.sideBarColor;
+                }
+                // Show position (OPERATOR text)
+                if (typeof s.showPosition === 'boolean') {
+                    this.state.showPosition = s.showPosition;
+                    if (this.elements.showPositionToggle) this.elements.showPositionToggle.checked = s.showPosition;
+                }
+                // Photo position
+                if (s.photoPosition) {
+                    this.state.photoPosition = { ...this.state.photoPosition, ...s.photoPosition };
+                    const xEl = document.getElementById('personPosXInput');
+                    const yEl = document.getElementById('personPosYInput');
+                    if (xEl) xEl.value = String(this.state.photoPosition.x);
+                    if (yEl) yEl.value = String(this.state.photoPosition.y);
+                    const posXVal = document.getElementById('personPosXValue');
+                    const posYVal = document.getElementById('personPosYValue');
+                    if (posXVal) posXVal.textContent = `${this.state.photoPosition.x}%`;
+                    if (posYVal) posYVal.textContent = `${this.state.photoPosition.y}%`;
+                }
+                // Photo zoom
+                if (typeof s.photoZoom === 'number') {
+                    this.state.photoZoom = Math.min(300, Math.max(50, s.photoZoom));
+                    const zEl = document.getElementById('personZoomInput');
+                    if (zEl) zEl.value = String(this.state.photoZoom);
+                    const zVal = document.getElementById('personZoomValue');
+                    if (zVal) zVal.textContent = `${this.state.photoZoom}%`;
+                }
+                // Apply to UI
+                this.updateCard();
+            } catch (e) {
+                console.warn('applySettingsSnapshot failed', e);
+            }
+        }
+
+        saveCurrentSettingsToRecord() {
+            try {
+                const idx = this.state.currentRecordIndex;
+                if (typeof idx !== 'number' || idx < 0) return;
+                if (!Array.isArray(this.state.batchRecords)) return;
+                const rec = this.state.batchRecords[idx];
+                if (!rec) return;
+                rec._settings = this.getSettingsSnapshot();
+            } catch (e) {
+                console.warn('saveCurrentSettingsToRecord failed', e);
+            }
+        }
+
+        setFormFromRecord(rec) {
+            const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v ?? ''; };
+            setVal('companyInput', rec.company);
+            setVal('nameInput', rec.name);
+            setVal('nipInput', rec.nip);
+            setVal('emailInput', rec.email);
+            setVal('phoneInput', rec.phone);
+            setVal('positionInput', rec.position);
+            setVal('officeInput', rec.office);
+            // Terapkan foto jika ada (data URI)
+            if (rec.photoUrl) {
+                this.state.photoUrl = rec.photoUrl;
+                this.displayPhoto(rec.photoUrl);
+            } else {
+                // Coba dari mapping PhotoFile (case-insensitive, dengan/tanpa ekstensi)
+                const norm = (s) => (s || '').toString().toLowerCase().replace(/[^a-z0-9]/g, '');
+                const raw = (rec.photoFile || rec.photofile || '').toString().trim();
+                const keyFull = raw;
+                const keyFullLc = raw.toLowerCase();
+                const base = raw.replace(/\.[^.]+$/, '');
+                const baseLc = base.toLowerCase();
+                const keyFullNorm = norm(raw);
+                const baseNorm = norm(base);
+                const map = this.state.batchPhotoMap || {};
+                // 1) Berdasarkan PhotoFile
+                let url = map[keyFull] || map[keyFullLc] || map[base] || map[baseLc] || map[keyFullNorm] || map[baseNorm];
+                // 2) Fallback berdasarkan Name jika belum ketemu
+                if (!url) {
+                    const name = (rec.name || '').toString().trim();
+                    const nameBase = name.replace(/\.[^.]+$/, '');
+                    url = map[name] || map[name.toLowerCase()] || map[nameBase] || map[nameBase.toLowerCase()] || map[norm(name)] || map[norm(nameBase)];
+                }
+                // 3) Fallback berdasarkan NIP (jika foto dinamai NIP)
+                if (!url) {
+                    const nip = (rec.nip || '').toString().trim();
+                    const nipBase = nip.replace(/\.[^.]+$/, '');
+                    url = map[nip] || map[nip.toLowerCase()] || map[nipBase] || map[nipBase.toLowerCase()] || map[norm(nip)] || map[norm(nipBase)];
+                }
+                if (url) {
+                    this.state.photoUrl = url;
+                    this.displayPhoto(url);
+                } else {
+                    this.state.photoUrl = null;
+                    this.displayPhoto(null);
+                }
+            }
+            // Terapkan setting khusus record jika tersedia
+            if (rec && rec._settings) {
+                this.applySettingsSnapshot(rec._settings);
+            }
+        }
+
+        restoreForm(snapshot) {
+            const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v ?? ''; };
+            setVal('companyInput', snapshot.company);
+            setVal('nameInput', snapshot.name);
+            setVal('nipInput', snapshot.nip);
+            setVal('emailInput', snapshot.email);
+            setVal('phoneInput', snapshot.phone);
+            setVal('positionInput', snapshot.position);
+            setVal('officeInput', snapshot.office);
+        }
+
+        downloadXlsxTemplate() {
+            try {
+                const headers = ['Name','NIP','Email','Phone','Position','Office','Company','Photo','PhotoFile'];
+                const sample = [{
+                    Name: 'Nama Lengkap',
+                    NIP: '1234567890',
+                    Email: 'email@example.com',
+                    Phone: '+62 81234567890',
+                    Position: 'OPERATOR',
+                    Office: 'Medan',
+                    Company: 'UPT SD NEGERI 067953',
+                    Photo: '',
+                    PhotoFile: 'SUGANDI.jpg'
+                }];
+
+                if (typeof XLSX !== 'undefined') {
+                    const ws = XLSX.utils.json_to_sheet(sample, { header: headers });
+                    const wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, 'DATA');
+                    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+                    const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'template_kartu.xlsx';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    setTimeout(() => URL.revokeObjectURL(url), 100);
+                } else {
+                    // Fallback ke CSV jika XLSX belum dimuat
+                    const csvRows = [headers.join(','), headers.map(h => JSON.stringify(sample[0][h] ?? '')).join(',')];
+                    const csvBlob = new Blob(["\uFEFF" + csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+                    const url = URL.createObjectURL(csvBlob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'template_kartu.csv';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    setTimeout(() => URL.revokeObjectURL(url), 100);
+                    this.showNotification('XLSX belum dimuat, mengunduh template CSV sebagai alternatif.', 'warning');
+                }
+            } catch (e) {
+                console.error(e);
+                this.showNotification('Gagal mengunduh template XLSX.', 'error');
+            }
+        }
+
+        async downloadBatchZip() {
+            if (!this.state.batchRecords || this.state.batchRecords.length === 0) {
+                this.showNotification('Tidak ada data batch. Import XLSX terlebih dahulu.', 'error');
+                return;
+            }
+
+            this.showLoading('Mempersiapkan unduhan batch...', true);
+            this.updateProgress(5);
+
+            try {
+                const zip = new JSZip();
+                const records = this.state.batchRecords;
+                const original = this.getFormSnapshot();
+
+                for (let i = 0; i < records.length; i++) {
+                    const rec = records[i];
+                    // Terapkan data ke form dan render kartu
+                    this.setFormFromRecord(rec);
+                    this.updateCard();
+                    await new Promise(r => setTimeout(r, 20));
+
+                    // Gunakan render offscreen clone agar lebih cepat dan stabil untuk batch
+                    let frontCanvas = null, backCanvas = null;
+                    try {
+                        frontCanvas = await this._withTimeout(this._createSideCanvasClone('front'), 10000, 'front render');
+                    } catch (e) {
+                        console.warn(`Front render gagal untuk index ${i}`, e);
+                    }
+                    try {
+                        backCanvas = await this._withTimeout(this._createSideCanvasClone('back'), 10000, 'back render');
+                    } catch (e) {
+                        console.warn(`Back render gagal untuk index ${i}`, e);
+                    }
+
+                    if (!frontCanvas && !backCanvas) {
+                        // Lewati jika keduanya gagal
+                        continue;
+                    }
+
+                    const frontBlob = frontCanvas ? await this.canvasToBlob(frontCanvas) : null;
+                    const backBlob = backCanvas ? await this.canvasToBlob(backCanvas) : null;
+
+                    const safeName = (rec.name || 'kartu').toString().trim().replace(/\s+/g, '_');
+                    const folder = zip.folder(safeName) || zip;
+                    if (frontBlob) folder.file(`${safeName}_ID_Card_Depan.png`, frontBlob);
+                    if (backBlob) folder.file(`${safeName}_ID_Card_Belakang.png`, backBlob);
+
+                    this.updateProgress(Math.min(95, Math.round(((i + 1) / records.length) * 90) + 5));
+                }
+
+                // Pulihkan form
+                this.restoreForm(original);
+                this.updateCard();
+
+                // Non-compression to speed up ZIP generation
+                const content = await zip.generateAsync({ type: 'blob', compression: 'STORE' });
+                const url = URL.createObjectURL(content);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `kartu_batch_${records.length}.zip`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 100);
+
+                this.updateProgress(100);
+                setTimeout(() => {
+                    this.hideLoading();
+                    this.showNotification(`✅ Berhasil membuat ZIP untuk ${records.length} data.`);
+                }, 300);
+            } catch (err) {
+                console.error(err);
+                this.hideLoading();
+                this.showNotification('❌ Gagal membuat ZIP batch.', 'error');
+            }
         }
 
         async _downloadBothSides() {
@@ -2891,6 +4220,7 @@ updateLogoVisibility();
         }
 
         async _createSideCanvas(side) {
+            side = side || 'front';
             // Simpan state asli
             const originalState = this.state.isFlipped;
             
@@ -2901,36 +4231,20 @@ updateLogoVisibility();
             }
             
             // Tunggu animasi selesai
-            await new Promise(resolve => setTimeout(resolve, 100));
-            
-            // Clone sisi yang dimaksud
+            await new Promise(resolve => setTimeout(resolve, 150));
+
+            // Render langsung elemen sisi yang sedang terlihat di layar
             const originalSide = document.getElementById(`card${side.charAt(0).toUpperCase() + side.slice(1)}`);
-            const clone = this._cloneCardSideForDownload(originalSide);
-            
-            // Buat container sementara
-            const tempContainer = document.createElement('div');
-            tempContainer.style.position = 'absolute';
-            tempContainer.style.left = '-9999px';
-            tempContainer.style.top = '0';
-            tempContainer.style.width = '400px';
-            tempContainer.style.height = '600px';
-            tempContainer.style.background = '#ffffff';
-            tempContainer.appendChild(clone);
-            
-            document.body.appendChild(tempContainer);
-            
-            // Buat canvas dari container
-            const canvas = await html2canvas(tempContainer, {
+            await this._waitForImages(originalSide);
+            const canvas = await html2canvas(originalSide, {
                 scale: 2,
                 useCORS: true,
                 allowTaint: true,
-                backgroundColor: '#ffffff',
+                backgroundColor: null,
                 logging: false,
                 width: 400,
                 height: 600,
             });
-            
-            document.body.removeChild(tempContainer);
             
             // Kembalikan state asli
             if (originalState !== this.state.isFlipped) {
@@ -2940,7 +4254,7 @@ updateLogoVisibility();
             return canvas;
         }
 
-        _cloneCardSideForDownload(originalSide) {
+        _cloneCardSideForDownload(originalSide, side) {
             const clone = originalSide.cloneNode(true);
             
             // Reset transform
@@ -2955,8 +4269,8 @@ updateLogoVisibility();
             clone.style.display = 'flex';
             clone.style.flexDirection = 'column';
             
-            // Perbaiki semua elemen
-            this._fixAllElementsForDownload(clone);
+            // Perbaiki semua elemen sesuai sisi
+            this._fixClonedCard(clone, side);
             
             return clone;
         }
@@ -2985,7 +4299,7 @@ updateLogoVisibility();
             if (side === 'front') {
                 this._fixFrontCardElements(clone);
                 // Hanya tambahkan dekoratif untuk bagian depan
-                if (this.state.template === 'decorative') {
+                if (this.state.template === 'decorative' || this.state.template === 'decorative2') {
                     this._fixDecorativeElementsForDownload(clone);
                     this._fixGreenSideBarsForDownload(clone);
                 }
@@ -2998,22 +4312,28 @@ updateLogoVisibility();
         _applyBackgroundToClone(clone, side) {
             if (side === 'front') {
                 if (this.state.frontBackground.type === 'image') {
-                    clone.style.backgroundImage = `url(${this.state.frontBackground.value})`;
-                    clone.style.backgroundSize = 'cover';
-                    clone.style.backgroundPosition = 'center';
+                    const url = this.state.frontBackground.value;
+                    clone.style.background = `url(${url}) center / cover no-repeat`;
+                    clone.style.backgroundColor = '';
+                    clone.style.backgroundImage = '';
+                    const header = clone.querySelector('.card-header');
+                    const footer = clone.querySelector('.card-footer');
+                    if (header) header.style.background = 'transparent';
+                    if (footer) footer.style.background = 'transparent';
                 } else {
                     clone.style.backgroundImage = 'none';
-                    if (this.state.template === 'plain') {
-                        clone.style.backgroundColor = this.state.frontBackground.value;
-                    } else {
-                        clone.style.background = 'var(--light-gradient)';
-                    }
+                    clone.style.background = 'none';
+                    clone.style.backgroundColor = this.state.frontBackground.value;
+                    const header = clone.querySelector('.card-header');
+                    const footer = clone.querySelector('.card-footer');
+                    if (header) header.style.background = '';
+                    if (footer) footer.style.background = '';
                 }
             } else {
                 if (this.state.backBackground.type === 'image') {
-                    clone.style.backgroundImage = `url(${this.state.backBackground.value})`;
-                    clone.style.backgroundSize = 'cover';
-                    clone.style.backgroundPosition = 'center';
+                    const url = this.state.backBackground.value;
+                    clone.style.background = `url(${url}) center / cover no-repeat`;
+                    clone.style.backgroundImage = '';
                 } else {
                     clone.style.backgroundImage = 'none';
                     clone.style.backgroundColor = this.state.backBackground.value;
@@ -3071,7 +4391,7 @@ updateLogoVisibility();
                 companyName.textContent = document.getElementById('companyInput').value;
                 companyName.style.cssText = `
                     font-size: ${this.state.fontSizes.company}px;
-                    font-weight: bold;
+                    font-weight: ${this.state.fontWeights.company ? 'bold' : 'normal'};
                     color: ${this.state.template === 'plain' ? 'white' : '#333'};
                     font-family: ${this.state.fonts.company};
                     text-shadow: ${this.state.template === 'plain' ? '2px 2px 8px rgba(0,0,0,0.7)' : 'none'};
@@ -3081,44 +4401,114 @@ updateLogoVisibility();
             // Card image container
             const cardImageContainer = clone.querySelector('.card-image-container');
             if (cardImageContainer) {
-                cardImageContainer.style.cssText = `
-                    flex: 1;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    padding: 10px;
-                    position: relative;
-                    min-height: 0;
-                    z-index: 1;
-                `;
+                // Ambil padding aktual dari tampilan asli jika ada
+                try {
+                    const origContainer = document.querySelector('#cardFront .card-image-container');
+                    const cs = origContainer ? getComputedStyle(origContainer) : null;
+                    const paddingInline = cs ? `${cs.paddingTop} ${cs.paddingRight} ${cs.paddingBottom} ${cs.paddingLeft}` : '10px 53px';
+                    cardImageContainer.style.cssText = `
+                        flex: 1;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        padding: ${paddingInline};
+                        position: relative;
+                        min-height: 0;
+                        z-index: 1;
+                    `;
+                } catch (_) {
+                    cardImageContainer.style.cssText = `
+                        flex: 1;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        padding: 10px 53px;
+                        position: relative;
+                        min-height: 0;
+                        z-index: 1;
+                    `;
+                }
             }
             
             // Person image
-            const personImage = clone.querySelector('.person-image');
-            if (personImage) {
-                personImage.style.cssText = `
-                    width: 300px;
-                    height: 350px;
-                    max-width: 100%;
-                    max-height: 100%;
-                    flex-shrink: 0;
-                    border-radius: 15px;
-                    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-                    overflow: hidden;
-                    position: relative;
+            // 1) Set langsung jika #personImg ada
+            const personImgDirect = clone.querySelector('#personImg');
+            if (personImgDirect) {
+                if (this.state.photoUrl) personImgDirect.src = this.state.photoUrl;
+                const y = (this.state.photoPosition && this.state.photoPosition.y) ?? 50;
+                const x = 50;
+                const zoom = this.state.photoZoom ?? 100;
+                personImgDirect.style.cssText = `
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                    object-position: ${x}% ${y}%;
+                    display: block;
+                    position: static;
+                    transform: scale(${zoom/100});
+                    transform-origin: ${x}% ${y}%;
                 `;
-                
-                const personImg = personImage.querySelector('img');
-                if (personImg) {
-                    if (this.state.photoUrl) {
-                        personImg.src = this.state.photoUrl;
-                    }
-                    personImg.style.cssText = `
-                        width: 100%;
-                        height: 100%;
-                        object-fit: cover;
-                        display: block;
+                // Pastikan pembungkusnya rapi jika ada container
+                const parent = personImgDirect.parentElement;
+                if (parent) {
+                    parent.style.cssText = `
+                        width: 300px;
+                        height: 350px;
+                        max-width: 100%;
+                        max-height: 100%;
+                        flex-shrink: 0;
+                        border-radius: 15px;
+                        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+                        overflow: hidden;
+                        position: relative;
                     `;
+                }
+            } else {
+                // 2) Dukungan selector lama: .person-image > img
+                const personImage = clone.querySelector('.person-image');
+                if (personImage) {
+                    personImage.style.cssText = `
+                        width: 300px;
+                        height: 350px;
+                        max-width: 100%;
+                        max-height: 100%;
+                        flex-shrink: 0;
+                        border-radius: 15px;
+                        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+                        overflow: hidden;
+                        position: relative;
+                    `;
+                    const personImg = personImage.querySelector('img');
+                    if (personImg) {
+                        if (this.state.photoUrl) personImg.src = this.state.photoUrl;
+                        const y = (this.state.photoPosition && this.state.photoPosition.y) ?? 50;
+                        const x = 50;
+                        const zoom = this.state.photoZoom ?? 100;
+                        personImage.style.overflow = 'hidden';
+                        personImg.style.cssText = `
+                            width: 100%;
+                            height: 100%;
+                            object-fit: cover;
+                            object-position: ${x}% ${y}%;
+                            display: block;
+                            position: static;
+                            transform: scale(${zoom/100});
+                            transform-origin: ${x}% ${y}%;
+                        `;
+                    }
+                }
+            }
+            // Fallback: jika elemen/selector berbeda, set ke img kandidat pertama
+            if (this.state.photoUrl) {
+                let candidate = clone.querySelector('.person-image img, .photo img, img#personImg, img[data-role="photo"]');
+                if (!candidate) {
+                    const imgs = Array.from(clone.querySelectorAll('img'))
+                        .filter(img => img.id !== 'logoImage' && !img.closest('.logo-container'));
+                    // Pilih img terbesar yang bukan logo
+                    candidate = imgs.sort((a,b) => (b.naturalWidth*b.naturalHeight) - (a.naturalWidth*a.naturalHeight))[0] || null;
+                }
+                if (candidate) {
+                    candidate.src = this.state.photoUrl;
                 }
             }
             
@@ -3143,7 +4533,7 @@ updateLogoVisibility();
                 nameText.textContent = document.getElementById('nameInput').value;
                 nameText.style.cssText = `
                     font-size: ${this.state.fontSizes.name}px;
-                    font-weight: bold;
+                    font-weight: ${this.state.fontWeights.name ? 'bold' : 'normal'};
                     color: ${this.state.template === 'plain' ? 'white' : '#333'};
                     font-family: ${this.state.fonts.name};
                     text-shadow: ${this.state.template === 'plain' ? '2px 2px 8px rgba(0,0,0,0.7)' : '2px 2px 4px rgba(0,0,0,0.2)'};
@@ -3155,7 +4545,7 @@ updateLogoVisibility();
             if (nipText) {
                 const nipValue = document.getElementById('nipInput').value;
                 if (nipValue) {
-                    nipText.textContent = `NIP: ${nipValue}`;
+                    nipText.textContent = `${nipValue}`;
                     nipText.style.display = 'block';
                 } else {
                     nipText.style.display = 'none';
@@ -3207,7 +4597,7 @@ updateLogoVisibility();
             if (backTitle) {
                 backTitle.style.cssText = `
                     font-size: ${this.state.fontSizes.company}px;
-                    font-weight: bold;
+                    font-weight: ${this.state.fontWeights.company ? 'bold' : 'normal'};
                     text-transform: uppercase;
                     letter-spacing: 2px;
                     text-align: center;
@@ -3239,6 +4629,7 @@ updateLogoVisibility();
                 backNameDisplay.textContent = document.getElementById('nameInput').value;
                 backNameDisplay.style.cssText = `
                     font-size: ${this.state.fontSizes.name}px;
+                    font-weight: ${this.state.fontWeights.name ? 'bold' : 'normal'};
                     color: white;
                     font-family: ${this.state.fonts.name};
                 `;
@@ -3247,7 +4638,7 @@ updateLogoVisibility();
             const backNipDisplay = clone.querySelector('#backNipDisplay');
             if (backNipDisplay) {
                 const nipValue = document.getElementById('nipInput').value;
-                backNipDisplay.textContent = nipValue ? `NIP ${nipValue}` : '';
+                backNipDisplay.textContent = nipValue ? `${nipValue}` : '';
                 backNipDisplay.style.display = nipValue ? 'block' : 'none';
                 backNipDisplay.style.cssText = `
                     font-size: ${this.state.fontSizes.other}px;
@@ -3350,10 +4741,14 @@ updateLogoVisibility();
         }
 
         _fixGreenSideBarsForDownload(clone) {
+            if (this.state.template === 'decorative2') return;
+            
             const greenSideLeft = clone.querySelector('.green-side-left');
             const greenSideRight = clone.querySelector('.green-side-right');
             
             if (greenSideLeft) {
+                // Hindari duplikasi konten saat export
+                greenSideLeft.innerHTML = '';
                 greenSideLeft.style.cssText = `
                     position: absolute;
                     left: -96px;
@@ -3387,6 +4782,8 @@ updateLogoVisibility();
             }
             
             if (greenSideRight) {
+                // Hindari duplikasi konten saat export
+                greenSideRight.innerHTML = '';
                 greenSideRight.style.cssText = `
                     position: absolute;
                     right: -96px;
@@ -3420,6 +4817,99 @@ updateLogoVisibility();
             }
         }
 
+        // Helpers for exporting decorative elements as SVG so shapes persist in canvas
+        _parseGradientColors(gradient) {
+            const matches = (gradient || '').match(/#[0-9a-fA-F]{3,8}/g);
+            if (matches && matches.length >= 2) return [matches[0], matches[1]];
+            return ['#667eea', '#764ba2'];
+        }
+
+        _createDecorativeSVG(element) {
+            const svgNS = 'http://www.w3.org/2000/svg';
+            const size = element.size;
+            const [c1, c2] = this._parseGradientColors(element.color);
+            const svg = document.createElementNS(svgNS, 'svg');
+            svg.setAttribute('width', String(size));
+            svg.setAttribute('height', String(size));
+            svg.setAttribute('viewBox', '0 0 100 100');
+            svg.style.position = 'absolute';
+            svg.style.left = `${element.x}px`;
+            svg.style.top = `${element.y}px`;
+            svg.style.opacity = '0.6';
+            svg.style.right = 'auto';
+            svg.style.bottom = 'auto';
+
+            const defs = document.createElementNS(svgNS, 'defs');
+            const gradId = `g${element.id}`;
+            const lg = document.createElementNS(svgNS, 'linearGradient');
+            lg.setAttribute('id', gradId);
+            lg.setAttribute('x1', '0');
+            lg.setAttribute('y1', '0');
+            lg.setAttribute('x2', '1');
+            lg.setAttribute('y2', '1');
+            const s1 = document.createElementNS(svgNS, 'stop');
+            s1.setAttribute('offset', '0%');
+            s1.setAttribute('stop-color', c1);
+            const s2 = document.createElementNS(svgNS, 'stop');
+            s2.setAttribute('offset', '100%');
+            s2.setAttribute('stop-color', c2);
+            lg.appendChild(s1);
+            lg.appendChild(s2);
+
+            const clipId = `c${element.id}`;
+            const cp = document.createElementNS(svgNS, 'clipPath');
+            cp.setAttribute('id', clipId);
+
+            const shape = element.shape;
+            let shapeEl;
+            if (shape === 'heart') {
+                const path = document.createElementNS(svgNS, 'path');
+                path.setAttribute('d', 'M12,21.35l-1.45-1.32C5.4,15.36,2,12.27,2,8.5C2,5.41,4.42,3,7.5,3c1.74,0,3.41,0.81,4.5,2.08C13.09,3.81,14.76,3,16.5,3C19.58,3,22,5.41,22,8.5c0,3.77-3.4,6.86-8.55,11.53L12,21.35z');
+                const g = document.createElementNS(svgNS, 'g');
+                g.setAttribute('transform', 'translate(-2,-3) scale(4.1667)');
+                g.appendChild(path);
+                shapeEl = g;
+            } else if (shape === 'circle') {
+                shapeEl = document.createElementNS(svgNS, 'circle');
+                shapeEl.setAttribute('cx', '50');
+                shapeEl.setAttribute('cy', '50');
+                shapeEl.setAttribute('r', '50');
+            } else if (shape === 'square') {
+                shapeEl = document.createElementNS(svgNS, 'rect');
+                shapeEl.setAttribute('x', '0');
+                shapeEl.setAttribute('y', '0');
+                shapeEl.setAttribute('width', '100');
+                shapeEl.setAttribute('height', '100');
+            } else {
+                const pointsMap = {
+                    triangle: '50,0 0,100 100,100',
+                    hexagon: '30,0 70,0 100,30 100,70 70,100 30,100 0,70 0,30',
+                    star: '50,0 61,35 98,35 68,57 79,91 50,70 21,91 32,57 2,35 39,35',
+                    diamond: '50,0 100,50 50,100 0,50',
+                    pentagon: '50,0 100,38 82,100 18,100 0,38',
+                    arrow: '0,20 60,20 60,0 100,50 60,100 60,80 0,80',
+                    cross: '20,0 80,0 80,20 100,20 100,80 80,80 80,100 20,100 20,80 0,80 0,20 20,20'
+                };
+                shapeEl = document.createElementNS(svgNS, 'polygon');
+                shapeEl.setAttribute('points', pointsMap[shape] || pointsMap.square);
+            }
+            cp.appendChild(shapeEl);
+            defs.appendChild(lg);
+            defs.appendChild(cp);
+
+            const fillRect = document.createElementNS(svgNS, 'rect');
+            fillRect.setAttribute('x', '0');
+            fillRect.setAttribute('y', '0');
+            fillRect.setAttribute('width', '100');
+            fillRect.setAttribute('height', '100');
+            fillRect.setAttribute('fill', `url(#${gradId})`);
+            fillRect.setAttribute('clip-path', `url(#${clipId})`);
+
+            svg.appendChild(defs);
+            svg.appendChild(fillRect);
+            return svg;
+        }
+
         _fixDecorativeElementsForDownload(clone) {
             const decorativeContainer = clone.querySelector('.decorative-circles');
             if (!decorativeContainer) return;
@@ -3427,29 +4917,12 @@ updateLogoVisibility();
             // Hapus semua elemen lama
             decorativeContainer.innerHTML = '';
             
-            // Salin semua elemen dekoratif dari state
+            // Render dekoratif sebagai SVG agar bentuk tidak menjadi kotak saat export
             this.state.decorativeElements.front.forEach(element => {
                 if (element.visible) {
-                    const el = document.createElement('div');
-                    el.className = `circle shape-${element.shape}`;
-                    el.style.cssText = `
-                        position: absolute;
-                        width: ${element.size}px;
-                        height: ${element.size}px;
-                        left: ${element.x}px;
-                        top: ${element.y}px;
-                        background: ${element.color};
-                        opacity: 0.6;
-                        z-index: 0;
-                        right: auto;
-                        bottom: auto;
-                        transition: none;
-                    `;
-                    
-                    // Terapkan clip-path inline
-                    this.applyClipPathInline(el, element.shape);
-                    
-                    decorativeContainer.appendChild(el);
+                    const svgEl = this._createDecorativeSVG(element);
+                    if (this.state.template === 'decorative2') svgEl.style.opacity = '0.5';
+                    decorativeContainer.appendChild(svgEl);
                 }
             });
         }
@@ -3530,16 +5003,32 @@ updateLogoVisibility();
             // Card image container
             const cardImageContainer = clone.querySelector('.card-image-container');
             if (cardImageContainer) {
-                cardImageContainer.style.cssText = `
-                    flex: 1;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    padding: 10px;
-                    position: relative;
-                    min-height: 0;
-                    z-index: 1;
-                `;
+                try {
+                    const origContainer = document.querySelector('#cardFront .card-image-container');
+                    const cs = origContainer ? getComputedStyle(origContainer) : null;
+                    const paddingInline = cs ? `${cs.paddingTop} ${cs.paddingRight} ${cs.paddingBottom} ${cs.paddingLeft}` : '10px 53px';
+                    cardImageContainer.style.cssText = `
+                        flex: 1;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        padding: ${paddingInline};
+                        position: relative;
+                        min-height: 0;
+                        z-index: 1;
+                    `;
+                } catch (_) {
+                    cardImageContainer.style.cssText = `
+                        flex: 1;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        padding: 10px 53px;
+                        position: relative;
+                        min-height: 0;
+                        z-index: 1;
+                    `;
+                }
             }
             
             // Person image
@@ -3619,9 +5108,13 @@ updateLogoVisibility();
             }
             
             // Green side bars dan dekoratif hanya untuk kartu depan
-            if (!isBackCard && this.state.template === 'decorative') {
+            if (!isBackCard && (this.state.template === 'decorative' || this.state.template === 'decorative2') && this.state.decorativeElements.front.length > 0) {
                 this._fixGreenSideBarsForDownload(clone);
                 this._fixDecorativeElementsForDownload(clone);
+            } else {
+                // Hapus dekoratif jika tidak digunakan
+                const decorativeContainer = clone.querySelector('.decorative-circles');
+                if (decorativeContainer) decorativeContainer.remove();
             }
             
             // Back card specific elements
