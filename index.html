@@ -4174,14 +4174,18 @@ Create by : Sugandi,S.Kom`;
             // Simpan state asli
             const originalState = this.state.isFlipped;
             
+            // Untuk front side, kurangi delay karena tidak perlu flip
+            const flipDelay = side === 'front' ? 50 : 300;
+            const layoutDelay = side === 'front' ? 5 : 20;
+            
             // Pastikan sisi yang benar ditampilkan
             if ((side === 'front' && this.state.isFlipped) || 
                 (side === 'back' && !this.state.isFlipped)) {
                 this.flipCard();
             }
             
-            // Tunggu animasi selesai
-            await new Promise(resolve => setTimeout(resolve, 300));
+            // Tunggu animasi selesai (lebih cepat untuk front)
+            await new Promise(resolve => setTimeout(resolve, flipDelay));
             
             // Dapatkan elemen asli
             const originalSide = document.getElementById(`card${side.charAt(0).toUpperCase() + side.slice(1)}`);
@@ -4189,12 +4193,29 @@ Create by : Sugandi,S.Kom`;
             if (!originalSide) {
                 throw new Error(`Elemen card${side.charAt(0).toUpperCase() + side.slice(1)} tidak ditemukan`);
             }
-            // Pastikan semua gambar pada elemen asli sudah siap
-            await this._waitForImages(originalSide);
+            
+            // Untuk front side, cukup tunggu gambar penting saja
+            if (side === 'front') {
+                // Hanya tunggu logo dan foto orang
+                const criticalImages = originalSide.querySelectorAll('#logoImage, #personImg');
+                const imagePromises = Array.from(criticalImages).map(img => {
+                    if (img.complete && img.naturalWidth !== 0) return Promise.resolve();
+                    return new Promise(resolve => {
+                        const done = () => { img.removeEventListener('load', done); img.removeEventListener('error', done); resolve(); };
+                        img.addEventListener('load', done, { once: true });
+                        img.addEventListener('error', done, { once: true });
+                    });
+                });
+                await Promise.race([Promise.all(imagePromises), new Promise(resolve => setTimeout(resolve, 1000))]);
+            } else {
+                // Untuk back side, tunggu semua gambar
+                await this._waitForImages(originalSide);
+            }
+            
             this.updateProgress(30);
 
-            // Sedikit jeda untuk layout stabil
-            await new Promise(resolve => setTimeout(resolve, 20));
+            // Sedikit jeda untuk layout stabil (lebih cepat untuk front)
+            await new Promise(resolve => setTimeout(resolve, layoutDelay));
 
             // Gunakan clone method untuk menghindari transform CSS yang menyebabkan inversi
             const canvas = await this._createSideCanvasClone(side);
@@ -4213,7 +4234,13 @@ Create by : Sugandi,S.Kom`;
             if ((side === 'front' && this.state.isFlipped) || (side === 'back' && !this.state.isFlipped)) {
                 this.flipCard();
             }
-            await new Promise(r => setTimeout(r, 60));
+            
+            // Kurangi delay untuk front side
+            const initialDelay = side === 'front' ? 20 : 60;
+            const imageWaitDelay = side === 'front' ? 30 : 80;
+            const scale = side === 'front' ? 1.0 : 1.25; // Lebih rendah untuk front side
+            
+            await new Promise(r => setTimeout(r, initialDelay));
 
             const originalSide = document.getElementById(`card${side.charAt(0).toUpperCase() + side.slice(1)}`);
             const clone = this._cloneCardSideForDownload(originalSide, side);
@@ -4228,22 +4255,40 @@ Create by : Sugandi,S.Kom`;
             temp.appendChild(clone);
             document.body.appendChild(temp);
 
-            await this._waitForImages(temp);
-            await new Promise(r => setTimeout(r, 80));
-
-            // Temporarily disable all transforms for proper back side orientation
-            const originalStyles = [];
-            const elementsToFix = temp.querySelectorAll('.card-flipper, .card-face, .card-back');
-            elementsToFix.forEach(el => {
-                originalStyles.push({
-                    element: el,
-                    transform: el.style.transform
+            // Untuk front side, cukup tunggu gambar kritis
+            if (side === 'front') {
+                const criticalImages = temp.querySelectorAll('#logoImage, #personImg');
+                const imagePromises = Array.from(criticalImages).map(img => {
+                    if (img.complete && img.naturalWidth !== 0) return Promise.resolve();
+                    return new Promise(resolve => {
+                        const done = () => { img.removeEventListener('load', done); img.removeEventListener('error', done); resolve(); };
+                        img.addEventListener('load', done, { once: true });
+                        img.addEventListener('error', done, { once: true });
+                    });
                 });
-                el.style.transform = 'none !important';
-            });
+                await Promise.race([Promise.all(imagePromises), new Promise(resolve => setTimeout(resolve, 500))]);
+            } else {
+                await this._waitForImages(temp);
+            }
+            
+            await new Promise(r => setTimeout(r, imageWaitDelay));
+
+            // Untuk front side, tidak perlu transform fix
+            if (side === 'back') {
+                // Temporarily disable all transforms for proper back side orientation
+                const originalStyles = [];
+                const elementsToFix = temp.querySelectorAll('.card-flipper, .card-face, .card-back');
+                elementsToFix.forEach(el => {
+                    originalStyles.push({
+                        element: el,
+                        transform: el.style.transform
+                    });
+                    el.style.transform = 'none !important';
+                });
+            }
             
             let canvas = await html2canvas(temp, {
-                scale: 1.25,
+                scale: scale,
                 useCORS: true,
                 allowTaint: true,
                 backgroundColor: '#ffffff',
@@ -4252,10 +4297,21 @@ Create by : Sugandi,S.Kom`;
                 height: 600,
             });
             
-            // Restore original styles
-            originalStyles.forEach(item => {
-                item.element.style.transform = item.transform;
-            });
+            // Restore original styles hanya untuk back side
+            if (side === 'back') {
+                const originalStyles = [];
+                const elementsToFix = temp.querySelectorAll('.card-flipper, .card-face, .card-back');
+                elementsToFix.forEach(el => {
+                    originalStyles.push({
+                        element: el,
+                        transform: el.style.transform
+                    });
+                    el.style.transform = 'none !important';
+                });
+                originalStyles.forEach(item => {
+                    item.element.style.transform = item.transform;
+                });
+            }
             
             // No additional processing needed - CSS handles it
 
