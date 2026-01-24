@@ -29,6 +29,13 @@
             --transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
             --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+        
+        @media (max-width: 768px) {
+            :root {
+                --card-width: 320px;
+                --card-height: 480px;
+            }
+        }
 
         /* ============================================
            BASE & LAYOUT STYLES
@@ -49,6 +56,57 @@
             justify-content: center;
             padding: 30px;
         }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+                align-items: flex-start;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+        }
+
+        /* Responsive Layout */
+        .container {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        @media (min-width: 768px) {
+            .container {
+                flex-direction: row;
+                gap: 40px;
+                align-items: stretch;
+            }
+        }
+        
+        .card-wrapper {
+            margin-bottom: 30px;
+            width: 100%;
+            max-width: var(--card-width);
+        }
+        
+        @media (min-width: 768px) {
+            .card-wrapper {
+                margin-bottom: 0;
+            }
+        }
+        
+        .control-panel {
+            width: 100%;
+            max-width: 450px;
+            margin: 0 auto;
+        }
+        
+        @media (min-width: 768px) {
+            .control-panel {
+                margin: 0;
+            }
+        }
 
         /* Batch Photos Gallery */
         .batch-photos-gallery {
@@ -56,6 +114,18 @@
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 8px;
+        }
+        
+        @media (max-width: 768px) {
+            .batch-photos-gallery {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .batch-photos-gallery {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
         .batch-photo-item {
             display: flex;
@@ -149,6 +219,17 @@
             width: var(--card-width);
             height: var(--card-height);
             flex-shrink: 0;
+            max-width: 100%;
+            max-height: calc(100vh - 40px); /* Limit height to viewport minus margin */
+            overflow: hidden; /* Ensure content stays within bounds */
+        }
+        
+        @media (max-width: 768px) {
+            .card-wrapper {
+                width: var(--card-width); /* Maintain width */
+                height: var(--card-height); /* Maintain height */
+                max-height: calc(100vh - 80px); /* Reduce max-height on smaller screens */
+            }
         }
 
         .card-container {
@@ -259,6 +340,14 @@
         }
         .card-front-decorative .green-side-left { left: -24%; transform: translateY(-50%) rotate(-90deg); border-radius: 0 0 50px 0; }
         .card-front-decorative .green-side-right { right: -24%; transform: translateY(-50%) rotate(90deg); border-radius: 0 0 0 50px; }
+        
+        @media (max-width: 480px) {
+            .card-front-decorative .green-side-left, .card-front-decorative .green-side-right {
+                height: 40px;
+            }
+            .card-front-decorative .green-side-left { left: -20%; }
+            .card-front-decorative .green-side-right { right: -20%; }
+        }
         .card-front-decorative .dept-text { color: white; font-weight: bold; font-size: 16px; padding: 10px 0; }
 
         /* --- Front Card: Plain Template --- */
@@ -326,14 +415,20 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 10px 53px; /* beri padding kiri/kanan agar frame pas di tengah antara green side */
+            padding: 10px 30px; /* beri padding kiri/kanan agar frame pas di tengah antara green side */
             position: relative;
             min-height: 0;
         }
+        
+        @media (max-width: 480px) {
+            .card-image-container {
+                padding: 10px 15px;
+            }
+        }
         .person-image {
-            width: 300px;
-            height: 350px;
-            background: url('data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCg0KPCFET0NUWVBFIHN2ZyBQVUJMSUMgIi0vL1czQy8vRFREIFNWRyAxLjEvL0VOIiAiaHR0cDovL3d3dy53My5vcmcvR3JhcGhpY3MvU1ZHLzEuMS9EVEQvc3ZnMTEuZHRkIj4NCjwhLS0gVXBsb2FkZWQgdG86IFNWRyBSZXBvLCB3d3cuc3ZncmVwby5jb20sIEdlbmVyYXRvcjogU1ZHIFJlcG8gTWl4ZXIgVG9vbHMgLS0+DQo8c3ZnIGhlaWdodD0iODAwcHgiIHdpZHRoPSI4MDBweCIgdmVyc2lvbj0iMS4xIiBpZD0iX3gzMl8iIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIA0KCSB2aWV3Qm94PSIwIDAgNTEyIDUxMiIgIHhtbDpzcGFjZT0icHJlc2VydmUiPg0KPHN0eWxlIHR5cGU9InRleHQvY3NzIj4NCgkuc3Qwe2ZpbGw6IzAwMDAwMDt9DQo8L3N0eWxlPg0KPGc+DQoJPHBhdGggY2xhc3M9InN0MCIgZD0iTTM2NC4wMzIsMzU1LjAzNWMtMy44NjItMS40NDYtOC4wNzItMy40MzYtMTIuMzUtNS43OTRsLTcxLjU3LDk4LjkzNWwtNS4wOS02NC44MTRoLTM4LjAzM2wtNS4wOTEsNjQuODE0DQoJCWwtNzEuNTY5LTk4LjkzNWMtNC40MDgsMi40NjYtOC42NTYsNC40ODctMTIuMzYxLDUuNzk0Yy0zNy40NzgsMTMuMTkzLTEyOS41NDksNTEuMTM2LTEyMy42MDcsMTIyLjIxDQoJCUMyNS43ODcsNDk0LjMwMSwxMTkuNTgyLDUxMiwyNTYuMDA2LDUxMmMxMzYuNDEzLDAsMjMwLjIwOC0xNy42OTksMjMxLjYzNC0zNC43NTUNCgkJQzQ5My41ODMsNDA2LjEwMiw0MDEuMjczLDM2OC45NjEsMzY0LjAzMiwzNTUuMDM1eiIvPg0KCTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik0xNzEuNTAxLDIwOC4yNzFjNS4yMSwyOS41MTYsMTMuOTY2LDU1LjU1NCwyNS40OTQsNjguMzhjMCwxNS4zODIsMCwyNi42MDQsMCwzNS41ODcNCgkJYzAsMC45MDItMC4xNTgsMS44NTItMC40MTYsMi44MzNsNDAuNDEsMTkuNDYydjI4LjU0NWgzOC4wMzN2LTI4LjU0NWw0MC4zOS0xOS40NTJjLTAuMjU4LTAuOTgxLTAuNDE2LTEuOTMyLTAuNDE2LTIuODQzDQoJCWMwLTguOTgzLDAtMjAuMjA1LDAtMzUuNTg3YzExLjU0OC0xMi44MjYsMjAuMzA0LTM4Ljg2NCwyNS41MTQtNjguMzhjMTIuMTQzLTQuMzM4LDE5LjA5Ni0xMS4yODEsMjcuNzYyLTQxLjY1OA0KCQljOS4yMzEtMzIuMzU4LTEzLjg3Ni0zMS4yNTgtMTMuODc2LTMxLjI1OGMxOC42OS02MS44NzMtNS45MjItMTIwLjAyMi00Ny4xMjQtMTE1Ljc1M2MtMjguNDI2LTQ5LjczLTEyMy42MjcsMTEuMzYtMTUzLjQ4LDcuMTAyDQoJCWMwLDE3LjA1NSw3LjExMiwyOS44NDIsNy4xMTIsMjkuODQyYy0xMC4zNzksMTkuNjktNi4zNzgsNTguOTUxLTMuNDQ2LDc4LjgwOWMtMS43MDQtMC4wMy0yMi42MDIsMC4xODgtMTMuNzI4LDMxLjI1WA0KCQlDMTUyLjQwNSwxOTYuOTksMTU5LjMzOCwyMDMuOTM0LDE3MS41MDEsMjA4LjI3MXoiLz4NCjwvZz4NCjwvc3ZnPg==') center/cover;
+            width: 240px;
+            height: 280px;
+            background: url('') center/cover; /* bg dasar person image */
             border-radius: 15px;
             box-shadow: 0 10px 20px rgba(0,0,0,0.2);
             overflow: hidden;
@@ -341,6 +436,13 @@
             max-height: 100%;
             flex-shrink: 0;
             position: relative;
+        }
+        
+        @media (min-width: 768px) {
+            .person-image {
+                width: 300px;
+                height: 350px;
+            }
         }
         .person-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .card-footer {
@@ -350,7 +452,7 @@
     flex-shrink: 0;
     
     /* --- TAMBAHKAN PROPERTI INI --- */
-    height: 80px; /* Atur tinggi footer menjadi 80px (bisa diubah) */
+    height: 100px; /* Increase height to accommodate larger names */
     display: flex;       /* Gunakan flex untuk mengatur isi */
     flex-direction: column; /* Susun teks secara vertikal */
     justify-content: center; /* Pusatkan teks secara vertikal */
@@ -361,7 +463,12 @@
     font-size: 24px; 
     font-weight: bold; 
     text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-    
+    max-height: 60px; /* Limit height to prevent pushing NIP down */
+    overflow: hidden; /* Hide overflow */
+    display: -webkit-box; /* Use flexbox for multiline truncation */
+    -webkit-line-clamp: 2; /* Limit to 2 lines */
+    -webkit-box-orient: vertical;
+            
     /* TAMBAHKAN INI UNTUK TEKS YANG TERLALU PANJANG
     white-space: nowrap;   
     overflow: hidden;      
@@ -415,8 +522,8 @@
             display: flex; 
             flex-direction: column; 
             justify-content: center; 
-            gap: 15px; 
-            margin-bottom: 20px;
+            gap: 8px; 
+            margin-bottom: 10px;
             overflow-y: auto;
             min-height: 0;
         }
@@ -426,7 +533,7 @@
             align-items: center; 
             justify-content: center; 
             text-align: center;
-            padding: 5px 0;
+            padding: 2px 0;
         }
         .qr-container { 
             display: flex; 
@@ -436,8 +543,8 @@
             flex-shrink: 0;
         }
         .qr-code {
-            width: 180px;
-            height: 180px;
+            width: 150px;
+            height: 150px;
             background: white;
             border-radius: 15px;
             display: flex;
@@ -446,6 +553,13 @@
             box-shadow: 0 8px 25px rgba(0,0,0,0.3);
             padding: 15px;
             position: relative;
+        }
+        
+        @media (min-width: 768px) {
+            .qr-code {
+                width: 180px;
+                height: 180px;
+            }
         }
         .qr-code canvas, .qr-code img { display: block; width: 100% !important; height: 100% !important; }
         .qr-info {
@@ -470,16 +584,25 @@
            ============================================ */
         .control-panel {
             background: white;
-            padding: 30px;
+            padding: 20px;
             border-radius: var(--border-radius);
             box-shadow: 0 10px 40px rgba(0,0,0,0.1);
             width: 100%;
             max-width: 450px;
-            height: var(--card-height);
+            min-height: 400px;
+            max-height: calc(100vh - 40px); /* Limit height to viewport minus some margin */
             flex-shrink: 0;
             display: flex;
             flex-direction: column;
             overflow-y: auto;
+        }
+        
+        @media (max-width: 480px) {
+            .control-panel {
+                padding: 15px;
+                min-height: 300px;
+                max-height: calc(100vh - 30px); /* Adjust for mobile */
+            }
         }
         .control-panel::-webkit-scrollbar { width: 8px; }
         .control-panel::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
@@ -490,6 +613,12 @@
         .section-title { font-size: 14px; font-weight: 600; color: #667eea; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
         .input-group { margin-bottom: 18px; }
         .input-label { display: block; margin-bottom: 8px; color: #555; font-weight: 500; font-size: 13px; }
+        
+        @media (max-width: 480px) {
+            .input-label {
+                font-size: 14px;
+            }
+        }
         .input-field {
             width: 100%;
             padding: 12px;
@@ -503,6 +632,13 @@
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
+        
+        @media (max-width: 480px) {
+            .input-field {
+                padding: 10px;
+                font-size: 16px; /* Larger text for mobile accessibility */
+            }
+        }
         .color-input { height: 45px; cursor: pointer; }
 
         /* --- Template Selector --- */
@@ -512,6 +648,7 @@
             border: 1px solid #e0e0e0;
             border-radius: 10px;
             padding: 5px;
+            flex-wrap: wrap;
         }
         .template-option {
             flex: 1;
@@ -523,6 +660,15 @@
             font-size: 13px;
             font-weight: 500;
             border: 2px solid transparent;
+            min-width: 80px;
+        }
+        
+        @media (max-width: 480px) {
+            .template-option {
+                min-width: 70px;
+                padding: 8px;
+                font-size: 12px;
+            }
         }
         .template-option input[type="radio"] { display: none; }
         .template-option input[type="radio"]:checked + span {
@@ -602,6 +748,14 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 10px;
+        }
+        
+        @media (max-width: 480px) {
+            .font-element-selector {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
         }
         .font-element-label {
             font-size: 13px;
@@ -880,6 +1034,15 @@
             z-index: 10;
             transition: var(--transition);
         }
+        
+        @media (max-width: 480px) {
+            .flip-indicator {
+                top: 5px;
+                right: 5px;
+                font-size: 10px;
+                padding: 3px 6px;
+            }
+        }
         .card-flipper.flipped .flip-indicator {
             background: rgba(102, 126, 234, 0.9);
             color: white;
@@ -1040,14 +1203,24 @@ input:checked + .toggle-label:before {
     display: flex;
     gap: 10px;
     margin-top: 15px;
+    flex-wrap: wrap;
 }
-
+        
 .export-settings {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
-
+        
 .import-settings {
     background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+        
+@media (max-width: 480px) {
+    .setting-actions {
+        flex-direction: column;
+    }
+    .export-settings, .import-settings {
+        width: 100%;
+    }
 }
 
 
@@ -1109,7 +1282,7 @@ input:checked + .toggle-label:before {
                         
                         <div class="card-image-container">
                             <div class="person-image" id="personImage">
-                                <img id="personImg" src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCg0KPCFET0NUWVBFIHN2ZyBQVUJMSUMgIi0vL1czQy8vRFREIFNWRyAxLjEvL0VOIiAiaHR0cDovL3d3dy53My5vcmcvR3JhcGhpY3MvU1ZHLzEuMS9EVEQvc3ZnMTEuZHRkIj4NCjwhLS0gVXBsb2FkZWQgdG86IFNWRyBSZXBvLCB3d3cuc3ZncmVwby5jb20sIEdlbmVyYXRvcjogU1ZHIFJlcG8gTWl4ZXIgVG9vbHMgLS0+DQo8c3ZnIGhlaWdodD0iODAwcHgiIHdpZHRoPSI4MDBweCIgdmVyc2lvbj0iMS4xIiBpZD0iX3gzMl8iIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIA0KCSB2aWV3Qm94PSIwIDAgNTEyIDUxMiIgIHhtbDpzcGFjZT0icHJlc2VydmUiPg0KPHN0eWxlIHR5cGU9InRleHQvY3NzIj4NCgkuc3Qwe2ZpbGw6IzAwMDAwMDt9DQo8L3N0eWxlPg0KPGc+DQoJPHBhdGggY2xhc3M9InN0MCIgZD0iTTM2NC4wMzIsMzU1LjAzNWMtMy44NjItMS40NDYtOC4wNzItMy40MzYtMTIuMzUtNS43OTRsLTcxLjU3LDk4LjkzNWwtNS4wOS02NC44MTRoLTM4LjAzM2wtNS4wOTEsNjQuODE0DQoJCWwtNzEuNTY5LTk4LjkzNWMtNC40MDgsMi40NjYtOC42NTYsNC40ODctMTIuMzYxLDUuNzk0Yy0zNy40NzgsMTMuMTkzLTEyOS41NDksNTEuMTM2LTEyMy42MDcsMTIyLjIxDQoJCUMyNS43ODcsNDk0LjMwMSwxMTkuNTgyLDUxMiwyNTYuMDA2LDUxMmMxMzYuNDEzLDAsMjMwLjIwOC0xNy42OTksMjMxLjYzNC0zNC43NTUNCgkJQzQ5My41ODMsNDA2LjEwMiw0MDEuMjczLDM2OC45NjEsMzY0LjAzMiwzNTUuMDM1eiIvPg0KCTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik0xNzEuNTAxLDIwOC4yNzFjNS4yMSwyOS41MTYsMTMuOTY2LDU1LjU1NCwyNS40OTQsNjguMzhjMCwxNS4zODIsMCwyNi42MDQsMCwzNS41ODcNCgkJYzAsMC45MDItMC4xNTgsMS44NTItMC40MTYsMi44MzNsNDAuNDEsMTkuNDYydjI4LjU0NWgzOC4wMzN2LTI4LjU0NWw0MC4zOS0xOS40NTJjLTAuMjU4LTAuOTgxLTAuNDE2LTEuOTMyLTAuNDE2LTIuODQzDQoJCWMwLTguOTgzLDAtMjAuMjA1LDAtMzUuNTg3YzExLjU0OC0xMi44MjYsMjAuMzA0LTM4Ljg2NCwyNS41MTQtNjguMzhjMTIuMTQzLTQuMzM4LDE5LjA5Ni0xMS4yODEsMjcuNzYyLTQxLjY1OA0KCQljOS4yMzEtMzIuMzU4LTEzLjg3Ni0zMS4yNTgtMTMuODc2LTMxLjI1OGMxOC42OS02MS44NzMtNS45MjItMTIwLjAyMi00Ny4xMjQtMTE1Ljc1M2MtMjguNDI2LTQ5LjczLTEyMy42MjcsMTEuMzYtMTUzLjQ4LDcuMTAyDQoJCWMwLDE3LjA1NSw3LjExMiwyOS44NDIsNy4xMTIsMjkuODQyYy0xMC4zNzksMTkuNjktNi4zNzgsNTguOTUxLTMuNDQ2LDc4LjgwOWMtMS43MDQtMC4wMy0yMi42MDIsMC4xODgtMTMuNzI4LDMxLjI1OA0KCQlDMTUyLjQwNSwxOTYuOTksMTU5LjMzOCwyMDMuOTM0LDE3MS41MDEsMjA4LjI3MXoiLz4NCjwvZz4NCjwvc3ZnPg==" alt="Person" style="display: block;">
+                                <img id="personImg" src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCg0KPCFET0NUWVBFIHN2ZyBQVUJMSUMgIi0vL1czQy8vRFREIFNWRyAxLjEvL0VOIiAiaHR0cDovL3d3dy53My5vcmcvR3JhcGhpY3MvU1ZHLzEuMS9EVEQvc3ZnMTEuZHRkIj4NCjwhLS0gVXBsb2FkZWQgdG86IFNWRyBSZXBvLCB3d3cuc3ZncmVwby5jb20sIEdlbmVyYXRvcjogU1ZHIFJlcG8gTWl4ZXIgVG9vbHMgLS0+DQo8c3ZnIGhlaWdodD0iODAwcHgiIHdpZHRoPSI4MDBweCIgdmVyc2lvbj0iMS4xIiBpZD0iX3gzMl8iIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIA0KCSB2aWV3Qm94PSIwIDAgNTEyIDUxMiIgIHhtbDpzcGFjZT0icHJlc2VydmUiPg0KPHN0eWxlIHR5cGU9InRleHQvY3NzIj4NCgkuc3Qwe2ZpbGw6IzAwMDAwMDt9DQo8L3N0eWxlPg0KPGc+DQoJPHBhdGggY2xhc3M9InN0MCIgZD0iTTM2NC4wMzIsMzU1LjAzNWMtMy44NjItMS40NDYtOC4wNzItMy40MzYtMTIuMzUtNS43OTRsLTcxLjU3LDk4LjkzNWwtNS4wOS02NC44MTRoLTM4LjAzM2wtNS4wOTEsNjQuODE0DQoJCWwtNzEuNTY5LTk4LjkzNWMtNC40MDgsMi40NjYtOC42NTYsNC40ODctMTIuMzYxLDUuNzk0Yy0zNy40NzgsMTMuMTkzLTEyOS41NDksNTEuMTM2LTEyMy42MDcsMTIyLjIxDQoJCUMyNS43ODcsNDk0LjMwMSwxMTkuNTgyLDUxMiwyNTYuMDA2LDUxMmMxMzYuNDEzLDAsMjMwLjIwOC0xNy42OTksMjMxLjYzNC0zNC43NTUNCgkJQzQ5My41ODMsNDA2LjEwMiw0MDEuMjczLDM2OC45NjEsMzY0LjAzMiwzNTUuMDM1eiIvPg0KCTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik0xNzEuNTAxLDIwOC4yNzFjNS4yMSwyOS41MTYsMTMuOTY2LDU1LjU1NCwyNS40OTQsNjguMzhjMCwxNS4zODIsMCwyNi42MDQsMCwzNS41ODcNCgkJYzAsMC45MDItMC4xNTgsMS44NTItMC40MTYsMi44MzNsNDAuNDEsMTkuNDYydjI4LjU0NWgzOC4wMzN2LTI4LjU0NWw0MC4zOS0xOS40NTJjLTAuMjU4LTAuOTgxLTAuNDE2LTEuOTMyLTAuNDE2LTIuODQzDQoJCWMwLTguOTgzLDAtMjAuMjA1LDAtMzUuNTg3YzExLjU0OC0xMi44MjYsMjAuMzA0LTM4Ljg2NCwyNS41MTQtNjguMzhjMTIuMTQzLTQuMzM4LDE5LjA5Ni0xMS4yODEsMjcuNzYyLTQxLjY1OA0KCQljOS4yMzEtMzIuMzU4LTEzLjg3Ni0zMS4yNTgtMTMuODc2LTMxLjI1OGMxOC42OS02MS44NzMtNS45MjItMTIwLjAyMi00Ny4xMjQtMTE1Ljc1M2MtMjguNDI2LTQ5LjczLTEyMy42MjcsMTEuMzYtMTUzLjQ4LDcuMTAyDQoJCWMwLDE3LjA1NSw3LjExMiwyOS44NDIsNy4xMTIsMjkuODQyYy0xMC4zNzksMTkuNjktNi4zNzgsNTguOTUxLTMuNDQ2LDc4LjgwOWMtMS43MDQtMC4wMy0yMi42MDIsMC4xODgtMTMuNzI4LDMxLjI1OA0KCQlDMTUyLjQwNSwxOTYuOTksMTU5LjMzOCwyMDMuOTM0LDE3MS41MDEsMjA4LjI3MXoiLz4NCjwvZz4NCjwvc3ZnPg==" alt="Person" style="display: block;"> <!--Foto Depan-->
                              </div>
                         </div>
                         
@@ -1446,6 +1619,10 @@ input:checked + .toggle-label:before {
                     <div class="input-group"><label class="input-label">Email</label><input type="email" class="input-field" id="emailInput" value="sugandigtexs@gmail.com"></div>
                     <div class="input-group"><label class="input-label">Telepon</label><input type="tel" class="input-field" id="phoneInput" value="+62 852-0646-1713"></div>
                     <div class="input-group"><label class="input-label">Kantor</label><input type="text" class="input-field" id="officeInput" value="Medan Deli"></div>
+                                        <div class="input-group">
+                                            <label class="input-label">Judul Info Kontak (Belakang Kartu)</label>
+                                            <input type="text" class="input-field" id="contactInfoTitleInput" value="CONTACT INFO">
+                                        </div>
                 </div>
 
                 <!-- Design Section -->
@@ -1458,6 +1635,89 @@ input:checked + .toggle-label:before {
                     <div class="input-group">
                         <label class="input-label">Warna Bilah Samping (Template Dekoratif)</label>
                         <input type="color" class="input-field color-input" id="sideBarColorInput" value="#11998e">
+                    </div>
+                </div>
+                
+                <!-- QR Code Size Customization Section -->
+                <div class="panel-section">
+                    <div class="section-title"><span> qr</span> Pengaturan Ukuran QR Code</div>
+                    
+                    <div class="font-control-group">
+                        <div class="font-element-selector">
+                            <span class="font-element-label">Ukuran QR Code</span>
+                        </div>
+                        <div class="font-size-control">
+                            <input type="range" class="font-size-slider" id="qrCodeSizeSlider" min="100" max="250" value="180">
+                            <span class="font-size-value" id="qrCodeSizeValue">180px</span>
+                        </div>
+                        <div class="slider-description">
+                            <small>Nilai dalam pixel (px). Rentang: 100-250px</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Back Side Text Customization Section -->
+                <div class="panel-section">
+                    <div class="section-title"><span> backpage</span> Pengaturan Teks Belakang</div>
+                    
+                    <!-- Back Title Font Settings -->
+                    <div class="font-control-group">
+                        <div class="font-element-selector">
+                            <span class="font-element-label">Judul (CONTACT INFO)</span>
+                        </div>
+                        <select class="font-dropdown" id="backTitleFontSelect">
+                            <option value="'Segoe UI', Tahoma, Geneva, Verdana, sans-serif">Segoe UI (Default)</option>
+                            <option value="'Arial', sans-serif">Arial</option>
+                            <option value="'Times New Roman', serif">Times New Roman</option>
+                            <option value="'Courier New', monospace">Courier New</option>
+                            <option value="'Georgia', serif">Georgia</option>
+                            <option value="'Verdana', sans-serif">Verdana</option>
+                            <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+                            <option value="'Impact', sans-serif">Impact</option>
+                            <option value="'Comic Sans MS', cursive">Comic Sans MS</option>
+                            <option value="custom-back-title">Custom Font</option>
+                        </select>
+                        <div class="font-size-control">
+                            <label class="input-label" style="margin:0;">Ukuran:</label>
+                            <input type="range" class="font-size-slider" id="backTitleFontSizeInput" min="16" max="40" value="28">
+                            <span class="font-size-value" id="backTitleFontSizeValue">28px</span>
+                        </div>
+                        <div class="font-size-control" style="margin-top:6px;">
+                            <label class="input-label" style="margin:0;">Tebal:</label>
+                            <input type="checkbox" id="backTitleFontBoldToggle" checked style="margin-left:8px;">
+                            <span style="font-size:12px;color:#555;">Bold</span>
+                        </div>
+                        <div class="font-preview" id="backTitleFontPreview">CONTACT INFO</div>
+                    </div>
+                    
+                    <!-- Back Content Font Settings -->
+                    <div class="font-control-group">
+                        <div class="font-element-selector">
+                            <span class="font-element-label">Konten (Nama, Email, dll)</span>
+                        </div>
+                        <select class="font-dropdown" id="backContentFontSelect">
+                            <option value="'Segoe UI', Tahoma, Geneva, Verdana, sans-serif">Segoe UI (Default)</option>
+                            <option value="'Arial', sans-serif">Arial</option>
+                            <option value="'Times New Roman', serif">Times New Roman</option>
+                            <option value="'Courier New', monospace">Courier New</option>
+                            <option value="'Georgia', serif">Georgia</option>
+                            <option value="'Verdana', sans-serif">Verdana</option>
+                            <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+                            <option value="'Impact', sans-serif">Impact</option>
+                            <option value="'Comic Sans MS', cursive">Comic Sans MS</option>
+                            <option value="custom-back-content">Custom Font</option>
+                        </select>
+                        <div class="font-size-control">
+                            <label class="input-label" style="margin:0;">Ukuran:</label>
+                            <input type="range" class="font-size-slider" id="backContentFontSizeInput" min="12" max="30" value="18">
+                            <span class="font-size-value" id="backContentFontSizeValue">18px</span>
+                        </div>
+                        <div class="font-size-control" style="margin-top:6px;">
+                            <label class="input-label" style="margin:0;">Tebal:</label>
+                            <input type="checkbox" id="backContentFontBoldToggle" style="margin-left:8px;">
+                            <span style="font-size:12px;color:#555;">Bold</span>
+                        </div>
+                        <div class="font-preview" id="backContentFontPreview">SUGANDI,S.Kom</div>
                     </div>
                 </div>
             </form>
@@ -1547,23 +1807,46 @@ updateLogoVisibility();
                 fonts: {
                     company: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
                     name: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-                    other: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+                    other: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+                    backTitle: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+                    backContent: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
                 },
                 fontSizes: {
                     company: 18,
                     name: 24,
-                    other: 16
+                    other: 16,
+                    backTitle: 28,
+                    backContent: 18
                 },
                 fontWeights: {
                     company: true,
                     name: true,
-                    other: false
+                    other: false,
+                    backTitle: true,
+                    backContent: false
                 },
                 customFonts: {
                     company: null,
                     name: null,
-                    other: null
+                    other: null,
+                    backTitle: null,
+                    backContent: null
                 },
+                fontWeights: {
+                    company: true,
+                    name: true,
+                    other: false,
+                    backTitle: true,
+                    backContent: false
+                },
+                customFonts: {
+                    company: null,
+                    name: null,
+                    other: null,
+                    backTitle: null,
+                    backContent: null
+                },
+                qrCodeSize: 180,
                 sideBarColor: '#11998e',
                 showPosition: true, // State untuk toggle jabatan
                 decorativeElements: {
@@ -1633,6 +1916,8 @@ updateLogoVisibility();
                 backTitle: document.querySelector('.back-title'),
                 // QR Code
                 qrcode: document.getElementById('qrcode'),
+                qrCodeSizeSlider: document.getElementById('qrCodeSizeSlider'),
+                qrCodeSizeValue: document.getElementById('qrCodeSizeValue'),
                 // Font Elements
                 companyFontSelect: document.getElementById('companyFontSelect'),
                 nameFontSelect: document.getElementById('nameFontSelect'),
@@ -1660,6 +1945,17 @@ updateLogoVisibility();
                 companyFontBoldToggle: document.getElementById('companyFontBoldToggle'),
                 nameFontBoldToggle: document.getElementById('nameFontBoldToggle'),
                 otherFontBoldToggle: document.getElementById('otherFontBoldToggle'),
+                // Back Side Font Elements
+                backTitleFontSelect: document.getElementById('backTitleFontSelect'),
+                backContentFontSelect: document.getElementById('backContentFontSelect'),
+                backTitleFontSizeInput: document.getElementById('backTitleFontSizeInput'),
+                backContentFontSizeInput: document.getElementById('backContentFontSizeInput'),
+                backTitleFontSizeValue: document.getElementById('backTitleFontSizeValue'),
+                backContentFontSizeValue: document.getElementById('backContentFontSizeValue'),
+                backTitleFontBoldToggle: document.getElementById('backTitleFontBoldToggle'),
+                backContentFontBoldToggle: document.getElementById('backContentFontBoldToggle'),
+                backTitleFontPreview: document.getElementById('backTitleFontPreview'),
+                backContentFontPreview: document.getElementById('backContentFontPreview'),
                 // Decorative Elements Controls
                 decorativeSection: document.getElementById('decorativeSection'),
                 elementsContainer: document.getElementById('elementsContainer'),
@@ -1811,11 +2107,15 @@ updateLogoVisibility();
             this.elements.companyFontSelect.addEventListener('change', (e) => this.handleFontChange(e, 'company'));
             this.elements.nameFontSelect.addEventListener('change', (e) => this.handleFontChange(e, 'name'));
             this.elements.otherFontSelect.addEventListener('change', (e) => this.handleFontChange(e, 'other'));
+            this.elements.backTitleFontSelect.addEventListener('change', (e) => this.handleFontChange(e, 'backTitle'));
+            this.elements.backContentFontSelect.addEventListener('change', (e) => this.handleFontChange(e, 'backContent'));
 
             // Font size sliders
             this.elements.companyFontSizeInput.addEventListener('input', (e) => this.handleFontSizeChange(e, 'company'));
             this.elements.nameFontSizeInput.addEventListener('input', (e) => this.handleFontSizeChange(e, 'name'));
             this.elements.otherFontSizeInput.addEventListener('input', (event) => this.handleFontSizeChange(event, 'other'));
+            this.elements.backTitleFontSizeInput.addEventListener('input', (e) => this.handleFontSizeChange(e, 'backTitle'));
+            this.elements.backContentFontSizeInput.addEventListener('input', (e) => this.handleFontSizeChange(e, 'backContent'));
 
             // Font weight (bold) toggles
             if (this.elements.companyFontBoldToggle) {
@@ -1839,6 +2139,23 @@ updateLogoVisibility();
                 this.elements.otherFontBoldToggle.addEventListener('change', (e) => {
                     this.state.fontWeights.other = e.target.checked;
                     this.updateFontPreview('other', this.state.fonts.other);
+                    this.updateCard();
+                });
+            }
+            // Back Side Font weight (bold) toggles
+            if (this.elements.backTitleFontBoldToggle) {
+                this.elements.backTitleFontBoldToggle.checked = !!this.state.fontWeights.backTitle;
+                this.elements.backTitleFontBoldToggle.addEventListener('change', (e) => {
+                    this.state.fontWeights.backTitle = e.target.checked;
+                    this.updateFontPreview('backTitle', this.state.fonts.backTitle);
+                    this.updateCard();
+                });
+            }
+            if (this.elements.backContentFontBoldToggle) {
+                this.elements.backContentFontBoldToggle.checked = !!this.state.fontWeights.backContent;
+                this.elements.backContentFontBoldToggle.addEventListener('change', (e) => {
+                    this.state.fontWeights.backContent = e.target.checked;
+                    this.updateFontPreview('backContent', this.state.fonts.backContent);
                     this.updateCard();
                 });
             }
@@ -1929,6 +2246,15 @@ updateLogoVisibility();
                 btn.addEventListener('click', () => this.downloadCard(side));
             });
 
+            // QR Code size slider
+            if (this.elements.qrCodeSizeSlider) {
+                this.elements.qrCodeSizeSlider.addEventListener('input', (e) => {
+                    this.state.qrCodeSize = parseInt(e.target.value);
+                    this.elements.qrCodeSizeValue.textContent = `${this.state.qrCodeSize}px`;
+                    this.updateCard();
+                });
+            }
+            
             // Keyboard shortcut
             document.addEventListener('keydown', (e) => this.handleKeyboard(e));
             // ESC untuk menutup overlay jika pernah tersisa
@@ -2642,24 +2968,54 @@ updateLogoVisibility();
                 cardHeader.style.padding = '';
             }
             
-            if (elementType === 'name' && size > 30) {
+            if (elementType === 'name') {
                 const cardFooter = document.querySelector('.card-footer');
-                const reduction = (size - 30) * 1;
-                const newPadding = Math.max(5, 15 - reduction);
-                cardFooter.style.padding = `${newPadding}px 20px`;
-            } else if (elementType === 'name' && size <= 30) {
-                const cardFooter = document.querySelector('.card-footer');
-                cardFooter.style.padding = '';
+                const nameText = document.querySelector('.name-text');
+                const nipText = document.querySelector('.nip-text');
+                
+                // Set a maximum height for the name text to prevent pushing NIP down
+                if (nameText) {
+                    nameText.style.maxHeight = `${size * 2.5}px`;
+                }
+                
+                // Adjust footer padding based on name size
+                if (size > 30) {
+                    const reduction = (size - 30) * 1;
+                    const newPadding = Math.max(5, 15 - reduction);
+                    cardFooter.style.padding = `${newPadding}px 20px`;
+                } else if (size <= 30) {
+                    cardFooter.style.padding = '';
+                }
             }
             
             if (elementType === 'other' && size > 18) {
                 const backInfo = document.querySelector('.back-info');
-                const reduction = (size - 18) * 1;
-                const newGap = Math.max(5, 15 - reduction);
+                const reduction = (size - 18) * 0.5;
+                const newGap = Math.max(3, 8 - reduction);
                 backInfo.style.gap = `${newGap}px`;
             } else if (elementType === 'other' && size <= 18) {
                 const backInfo = document.querySelector('.back-info');
-                backInfo.style.gap = '';
+                backInfo.style.gap = '8px';
+            }
+            
+            if (elementType === 'backTitle' && size > 28) {
+                const backTitle = document.querySelector('.back-title');
+                const reduction = (size - 28) * 0.7;
+                const newMarginBottom = Math.max(5, 15 - reduction);
+                if (backTitle) backTitle.style.marginBottom = `${newMarginBottom}px`;
+            } else if (elementType === 'backTitle' && size <= 28) {
+                const backTitle = document.querySelector('.back-title');
+                if (backTitle) backTitle.style.marginBottom = '10px';
+            }
+            
+            if (elementType === 'backContent' && size > 18) {
+                const backInfo = document.querySelector('.back-info');
+                const reduction = (size - 18) * 0.5;
+                const newGap = Math.max(3, 8 - reduction);
+                if (backInfo) backInfo.style.gap = `${newGap}px`;
+            } else if (elementType === 'backContent' && size <= 18) {
+                const backInfo = document.querySelector('.back-info');
+                if (backInfo) backInfo.style.gap = '8px';
             }
         }
 
@@ -2724,6 +3080,10 @@ updateLogoVisibility();
                 preview.textContent = document.getElementById('nameInput').value || 'SUGANDI,S.Kom';
             } else if (elementType === 'other') {
                 preview.textContent = document.getElementById('nipInput').value ? `${document.getElementById('nipInput').value}` : '1234567890';
+            } else if (elementType === 'backTitle') {
+                preview.textContent = 'CONTACT INFO';
+            } else if (elementType === 'backContent') {
+                preview.textContent = 'SUGANDI,S.Kom';
             }
         }
 
@@ -2731,8 +3091,6 @@ updateLogoVisibility();
             if (elementType === 'company') {
                 this.elements.companyName.style.fontFamily = font;
                 this.elements.companyName.style.fontWeight = this.state.fontWeights.company ? 'bold' : 'normal';
-                this.elements.backTitle.style.fontFamily = font;
-                this.elements.backTitle.style.fontWeight = this.state.fontWeights.company ? 'bold' : 'normal';
             } else if (elementType === 'name') {
                 this.elements.nameText.style.fontFamily = font;
                 this.elements.nameText.style.fontWeight = this.state.fontWeights.name ? 'bold' : 'normal';
@@ -2742,6 +3100,15 @@ updateLogoVisibility();
                 const weight = this.state.fontWeights.other ? 'bold' : 'normal';
                 this.elements.nipText.style.fontFamily = font;
                 this.elements.nipText.style.fontWeight = weight;
+                this.elements.deptTextLeft.style.fontFamily = font;
+                this.elements.deptTextLeft.style.fontWeight = weight;
+                this.elements.deptTextRight.style.fontFamily = font;
+                this.elements.deptTextRight.style.fontWeight = weight;
+            } else if (elementType === 'backTitle') {
+                this.elements.backTitle.style.fontFamily = font;
+                this.elements.backTitle.style.fontWeight = this.state.fontWeights.backTitle ? 'bold' : 'normal';
+            } else if (elementType === 'backContent') {
+                const weight = this.state.fontWeights.backContent ? 'bold' : 'normal';
                 this.elements.backNipDisplay.style.fontFamily = font;
                 this.elements.backNipDisplay.style.fontWeight = weight;
                 this.elements.backEmailDisplay.style.fontFamily = font;
@@ -2752,29 +3119,28 @@ updateLogoVisibility();
                 this.elements.backPositionDisplay.style.fontWeight = weight;
                 this.elements.backOfficeDisplay.style.fontFamily = font;
                 this.elements.backOfficeDisplay.style.fontWeight = weight;
-                this.elements.deptTextLeft.style.fontFamily = font;
-                this.elements.deptTextLeft.style.fontWeight = weight;
-                this.elements.deptTextRight.style.fontFamily = font;
-                this.elements.deptTextRight.style.fontWeight = weight;
             }
         }
 
         applyFontSizeToCard(elementType, size) {
             if (elementType === 'company') {
                 this.elements.companyName.style.fontSize = `${size}px`;
-                this.elements.backTitle.style.fontSize = `${size}px`;
             } else if (elementType === 'name') {
                 this.elements.nameText.style.fontSize = `${size}px`;
+                this.elements.nameText.style.maxHeight = `${size * 2.5}px`; // Limit height to prevent pushing NIP down
                 this.elements.backNameDisplay.style.fontSize = `${size}px`;
             } else if (elementType === 'other') {
                 this.elements.nipText.style.fontSize = `${size}px`;
+                this.elements.deptTextLeft.style.fontSize = `${size}px`;
+                this.elements.deptTextRight.style.fontSize = `${size}px`;
+            } else if (elementType === 'backTitle') {
+                this.elements.backTitle.style.fontSize = `${size}px`;
+            } else if (elementType === 'backContent') {
                 this.elements.backNipDisplay.style.fontSize = `${size}px`;
                 this.elements.backEmailDisplay.style.fontSize = `${size}px`;
                 this.elements.backPhoneDisplay.style.fontSize = `${size}px`;
                 this.elements.backPositionDisplay.style.fontSize = `${size}px`;
                 this.elements.backOfficeDisplay.style.fontSize = `${size}px`;
-                this.elements.deptTextLeft.style.fontSize = `${size}px`;
-                this.elements.deptTextRight.style.fontSize = `${size}px`;
             }
         }
 
@@ -3054,6 +3420,14 @@ updateLogoVisibility();
             this.elements.backPhoneDisplay.textContent = data.phone.replace(/-/g, ' - ');
             this.elements.backPositionDisplay.textContent = data.position;
             this.elements.backOfficeDisplay.textContent = data.office;
+            
+            // Update contact info title if custom input exists
+            const contactInfoTitleInput = document.getElementById('contactInfoTitleInput');
+            if (contactInfoTitleInput && contactInfoTitleInput.value.trim() !== '') {
+                this.elements.backTitle.textContent = contactInfoTitleInput.value.trim();
+            } else {
+                this.elements.backTitle.textContent = 'CONTACT INFO';
+            }
 
             // Update Footer Color (only for decorative template)
             if (this.state.template === 'decorative') {
@@ -3068,10 +3442,14 @@ updateLogoVisibility();
             this.applyFontToCard('company', this.state.fonts.company);
             this.applyFontToCard('name', this.state.fonts.name);
             this.applyFontToCard('other', this.state.fonts.other);
+            this.applyFontToCard('backTitle', this.state.fonts.backTitle);
+            this.applyFontToCard('backContent', this.state.fonts.backContent);
 
             this.applyFontSizeToCard('company', this.state.fontSizes.company);
             this.applyFontSizeToCard('name', this.state.fontSizes.name);
             this.applyFontSizeToCard('other', this.state.fontSizes.other);
+            this.applyFontSizeToCard('backTitle', this.state.fontSizes.backTitle);
+            this.applyFontSizeToCard('backContent', this.state.fontSizes.backContent);
             
             // Apply layout adjustments for current font sizes
             this.adjustLayoutForFontSize('company', this.state.fontSizes.company);
@@ -3109,6 +3487,9 @@ updateLogoVisibility();
 
             // Generate QR Code
             this.generateQRCode(data);
+            
+            // Update QR code size
+            this.updateQRCodeSize();
             // Auto-save settings to current record if any
             this.saveCurrentSettingsToRecord();
         }
@@ -3122,18 +3503,70 @@ updateLogoVisibility();
                 email: document.getElementById('emailInput').value,
                 phone: document.getElementById('phoneInput').value,
                 office: document.getElementById('officeInput').value,
+                contactInfoTitle: document.getElementById('contactInfoTitleInput').value,
                 headerColor: document.getElementById('headerColorInput').value,
             };
         }
 
         generateQRCode(data) {
-            const vcardData = `${data.name}\n${data.nip}\n${data.position}\n${data.company}\n${data.phone}\n${data.email}\n${data.office}\n`;
+            const vcardData = `${data.name}
+${data.nip}
+${data.position}
+${data.company}
+${data.phone}
+${data.email}
+${data.office}
+Create by : Sugandi,S.Kom`;
             
             this.elements.qrcode.innerHTML = '';
             new QRCode(this.elements.qrcode, {
                 text: vcardData,
-                width: 170,
-                height: 170,
+                width: this.state.qrCodeSize - 20,
+                height: this.state.qrCodeSize - 20,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+        
+        updateQRCodeSize() {
+            const qrContainer = this.elements.qrcode;
+            if (qrContainer) {
+                // Update ukuran container QR code
+                qrContainer.style.width = `${this.state.qrCodeSize}px`;
+                qrContainer.style.height = `${this.state.qrCodeSize}px`;
+                
+                // Update ukuran canvas QR code jika sudah ada
+                const qrCanvas = qrContainer.querySelector('canvas');
+                if (qrCanvas) {
+                    qrCanvas.style.width = `${this.state.qrCodeSize - 20}px`;
+                    qrCanvas.style.height = `${this.state.qrCodeSize - 20}px`;
+                    
+                    // Regenerate QR code dengan ukuran baru
+                    this.regenerateQRCodeWithSize();
+                }
+            }
+        }
+        
+        regenerateQRCodeWithSize() {
+            const data = this.getFormData();
+            const vcardData = `${data.name}
+${data.nip}
+${data.position}
+${data.company}
+${data.phone}
+${data.email}
+${data.office}
+Create by : Sugandi,S.Kom`;
+            
+            // Bersihkan QR code sebelumnya
+            this.elements.qrcode.innerHTML = '';
+            
+            // Generate QR code baru dengan ukuran yang disesuaikan
+            new QRCode(this.elements.qrcode, {
+                text: vcardData,
+                width: this.state.qrCodeSize - 20,
+                height: this.state.qrCodeSize - 20,
                 colorDark: "#000000",
                 colorLight: "#ffffff",
                 correctLevel: QRCode.CorrectLevel.H
@@ -3763,16 +4196,8 @@ updateLogoVisibility();
             // Sedikit jeda untuk layout stabil
             await new Promise(resolve => setTimeout(resolve, 20));
 
-            // Render langsung elemen yang terlihat di layar agar hasil identik
-            const canvas = await html2canvas(originalSide, {
-                scale: 1.25,
-                useCORS: true,
-                allowTaint: true,
-                backgroundColor: null,
-                logging: false,
-                width: 400,
-                height: 600,
-            });
+            // Gunakan clone method untuk menghindari transform CSS yang menyebabkan inversi
+            const canvas = await this._createSideCanvasClone(side);
             
             // Kembalikan state asli
             if (originalState !== this.state.isFlipped) {
@@ -3806,7 +4231,18 @@ updateLogoVisibility();
             await this._waitForImages(temp);
             await new Promise(r => setTimeout(r, 80));
 
-            const canvas = await html2canvas(temp, {
+            // Temporarily disable all transforms for proper back side orientation
+            const originalStyles = [];
+            const elementsToFix = temp.querySelectorAll('.card-flipper, .card-face, .card-back');
+            elementsToFix.forEach(el => {
+                originalStyles.push({
+                    element: el,
+                    transform: el.style.transform
+                });
+                el.style.transform = 'none !important';
+            });
+            
+            let canvas = await html2canvas(temp, {
                 scale: 1.25,
                 useCORS: true,
                 allowTaint: true,
@@ -3815,6 +4251,13 @@ updateLogoVisibility();
                 width: 400,
                 height: 600,
             });
+            
+            // Restore original styles
+            originalStyles.forEach(item => {
+                item.element.style.transform = item.transform;
+            });
+            
+            // No additional processing needed - CSS handles it
 
             document.body.removeChild(temp);
             if (originalState !== this.state.isFlipped) this.flipCard();
@@ -3897,7 +4340,8 @@ updateLogoVisibility();
                 sideBarColor: this.state.sideBarColor,
                 showPosition: this.state.showPosition,
                 photoPosition: { ...this.state.photoPosition },
-                photoZoom: this.state.photoZoom
+                photoZoom: this.state.photoZoom,
+                qrCodeSize: this.state.qrCodeSize
             };
         }
 
@@ -3934,6 +4378,8 @@ updateLogoVisibility();
                     if (this.elements.companyFontSelect && s.fonts.company) this.elements.companyFontSelect.value = s.fonts.company;
                     if (this.elements.nameFontSelect && s.fonts.name) this.elements.nameFontSelect.value = s.fonts.name;
                     if (this.elements.otherFontSelect && s.fonts.other) this.elements.otherFontSelect.value = s.fonts.other;
+                    if (this.elements.backTitleFontSelect && s.fonts.backTitle) this.elements.backTitleFontSelect.value = s.fonts.backTitle;
+                    if (this.elements.backContentFontSelect && s.fonts.backContent) this.elements.backContentFontSelect.value = s.fonts.backContent;
                 }
                 // Font sizes
                 if (s.fontSizes) {
@@ -3950,6 +4396,14 @@ updateLogoVisibility();
                         this.elements.otherFontSizeInput.value = String(s.fontSizes.other);
                         this.elements.otherFontSizeValue.textContent = `${s.fontSizes.other}px`;
                     }
+                    if (this.elements.backTitleFontSizeInput && s.fontSizes.backTitle) {
+                        this.elements.backTitleFontSizeInput.value = String(s.fontSizes.backTitle);
+                        this.elements.backTitleFontSizeValue.textContent = `${s.fontSizes.backTitle}px`;
+                    }
+                    if (this.elements.backContentFontSizeInput && s.fontSizes.backContent) {
+                        this.elements.backContentFontSizeInput.value = String(s.fontSizes.backContent);
+                        this.elements.backContentFontSizeValue.textContent = `${s.fontSizes.backContent}px`;
+                    }
                 }
                 // Side bar color
                 if (typeof s.sideBarColor === 'string') {
@@ -3957,6 +4411,13 @@ updateLogoVisibility();
                     const input = document.getElementById('sideBarColorInput');
                     if (input) input.value = s.sideBarColor;
                 }
+                // QR code size
+                if (typeof s.qrCodeSize === 'number') {
+                    this.state.qrCodeSize = Math.min(250, Math.max(100, s.qrCodeSize));
+                    if (this.elements.qrCodeSizeSlider) this.elements.qrCodeSizeSlider.value = String(this.state.qrCodeSize);
+                    if (this.elements.qrCodeSizeValue) this.elements.qrCodeSizeValue.textContent = `${this.state.qrCodeSize}px`;
+                }
+                
                 // Show position (OPERATOR text)
                 if (typeof s.showPosition === 'boolean') {
                     this.state.showPosition = s.showPosition;
@@ -4231,20 +4692,36 @@ updateLogoVisibility();
             }
             
             // Tunggu animasi selesai
-            await new Promise(resolve => setTimeout(resolve, 150));
-
-            // Render langsung elemen sisi yang sedang terlihat di layar
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Clone sisi yang dimaksud menggunakan metode yang sama dengan working file
             const originalSide = document.getElementById(`card${side.charAt(0).toUpperCase() + side.slice(1)}`);
-            await this._waitForImages(originalSide);
-            const canvas = await html2canvas(originalSide, {
+            const clone = this._cloneCardSideForDownload(originalSide, side);
+            
+            // Buat container sementara
+            const tempContainer = document.createElement('div');
+            tempContainer.style.position = 'absolute';
+            tempContainer.style.left = '-9999px';
+            tempContainer.style.top = '0';
+            tempContainer.style.width = '400px';
+            tempContainer.style.height = '600px';
+            tempContainer.style.background = '#ffffff';
+            tempContainer.appendChild(clone);
+            
+            document.body.appendChild(tempContainer);
+            
+            // Buat canvas dari container
+            const canvas = await html2canvas(tempContainer, {
                 scale: 2,
                 useCORS: true,
                 allowTaint: true,
-                backgroundColor: null,
+                backgroundColor: '#ffffff',
                 logging: false,
                 width: 400,
                 height: 600,
             });
+            
+            document.body.removeChild(tempContainer);
             
             // Kembalikan state asli
             if (originalState !== this.state.isFlipped) {
@@ -4257,8 +4734,7 @@ updateLogoVisibility();
         _cloneCardSideForDownload(originalSide, side) {
             const clone = originalSide.cloneNode(true);
             
-            // Reset transform
-            clone.style.transform = 'none';
+            // Reset basic properties but preserve transform for back side fix
             clone.style.backfaceVisibility = 'visible';
             clone.style.position = 'relative';
             clone.style.width = '400px';
@@ -4268,6 +4744,9 @@ updateLogoVisibility();
             clone.style.boxSizing = 'border-box';
             clone.style.display = 'flex';
             clone.style.flexDirection = 'column';
+            
+            // Reset all transforms for clean start
+            clone.style.transform = 'none';
             
             // Perbaiki semua elemen sesuai sisi
             this._fixClonedCard(clone, side);
@@ -4592,19 +5071,28 @@ updateLogoVisibility();
             if (greenSideLeft) greenSideLeft.remove();
             if (greenSideRight) greenSideRight.remove();
             
+            // No special text orientation handling needed - use standard approach like working file
+            
             // Back title
             const backTitle = clone.querySelector('.back-title');
             if (backTitle) {
+                // Update with custom contact info title if available
+                const contactInfoTitleInput = document.getElementById('contactInfoTitleInput');
+                if (contactInfoTitleInput && contactInfoTitleInput.value.trim() !== '') {
+                    backTitle.textContent = contactInfoTitleInput.value.trim();
+                } else {
+                    backTitle.textContent = 'CONTACT INFO';
+                }
                 backTitle.style.cssText = `
-                    font-size: ${this.state.fontSizes.company}px;
-                    font-weight: ${this.state.fontWeights.company ? 'bold' : 'normal'};
+                    font-size: ${this.state.fontSizes.backTitle}px;
+                    font-weight: ${this.state.fontWeights.backTitle ? 'bold' : 'normal'};
                     text-transform: uppercase;
                     letter-spacing: 2px;
                     text-align: center;
-                    margin-bottom: 20px;
+                    margin-bottom: 10px;
                     flex-shrink: 0;
                     color: white;
-                    font-family: ${this.state.fonts.company};
+                    font-family: ${this.state.fonts.backTitle};
                 `;
             }
             
@@ -4616,8 +5104,8 @@ updateLogoVisibility();
                     display: flex;
                     flex-direction: column;
                     justify-content: center;
-                    gap: 15px;
-                    margin-bottom: 20px;
+                    gap: 8px;
+                    margin-bottom: 10px;
                     overflow-y: auto;
                     min-height: 0;
                 `;
@@ -4641,9 +5129,9 @@ updateLogoVisibility();
                 backNipDisplay.textContent = nipValue ? `${nipValue}` : '';
                 backNipDisplay.style.display = nipValue ? 'block' : 'none';
                 backNipDisplay.style.cssText = `
-                    font-size: ${this.state.fontSizes.other}px;
+                    font-size: ${this.state.fontSizes.backContent}px;
                     color: white;
-                    font-family: ${this.state.fonts.other};
+                    font-family: ${this.state.fonts.backContent};
                 `;
             }
             
@@ -4651,9 +5139,9 @@ updateLogoVisibility();
             if (backEmailDisplay) {
                 backEmailDisplay.textContent = document.getElementById('emailInput').value;
                 backEmailDisplay.style.cssText = `
-                    font-size: ${this.state.fontSizes.other}px;
+                    font-size: ${this.state.fontSizes.backContent}px;
                     color: white;
-                    font-family: ${this.state.fonts.other};
+                    font-family: ${this.state.fonts.backContent};
                 `;
             }
             
@@ -4661,9 +5149,9 @@ updateLogoVisibility();
             if (backPhoneDisplay) {
                 backPhoneDisplay.textContent = document.getElementById('phoneInput').value.replace(/-/g, ' - ');
                 backPhoneDisplay.style.cssText = `
-                    font-size: ${this.state.fontSizes.other}px;
+                    font-size: ${this.state.fontSizes.backContent}px;
                     color: white;
-                    font-family: ${this.state.fonts.other};
+                    font-family: ${this.state.fonts.backContent};
                 `;
             }
             
@@ -4671,9 +5159,9 @@ updateLogoVisibility();
             if (backPositionDisplay) {
                 backPositionDisplay.textContent = document.getElementById('positionInput').value;
                 backPositionDisplay.style.cssText = `
-                    font-size: ${this.state.fontSizes.other}px;
+                    font-size: ${this.state.fontSizes.backContent}px;
                     color: white;
-                    font-family: ${this.state.fonts.other};
+                    font-family: ${this.state.fonts.backContent};
                 `;
             }
             
@@ -4681,9 +5169,9 @@ updateLogoVisibility();
             if (backOfficeDisplay) {
                 backOfficeDisplay.textContent = document.getElementById('officeInput').value;
                 backOfficeDisplay.style.cssText = `
-                    font-size: ${this.state.fontSizes.other}px;
+                    font-size: ${this.state.fontSizes.backContent}px;
                     color: white;
-                    font-family: ${this.state.fonts.other};
+                    font-family: ${this.state.fonts.backContent};
                 `;
             }
             
@@ -4703,8 +5191,8 @@ updateLogoVisibility();
             const qrCode = clone.querySelector('.qr-code');
             if (qrCode) {
                 qrCode.style.cssText = `
-                    width: 180px;
-                    height: 180px;
+                    width: ${this.state.qrCodeSize}px;
+                    height: ${this.state.qrCodeSize}px;
                     background: white;
                     border-radius: 15px;
                     display: flex;
@@ -4718,12 +5206,19 @@ updateLogoVisibility();
                 // Clear dan regenerate QR code
                 qrCode.innerHTML = '';
                 const data = this.getFormData();
-                const vcardData = `${data.name}\n${data.nip}\n${data.company}\n${data.position}\n${data.phone}\n${data.email}\n${data.office}\nCreate by : Sugandi,S.Kom`;
+                const vcardData = `${data.name}
+${data.nip}
+${data.company}
+${data.position}
+${data.phone}
+${data.email}
+${data.office}
+Create by : Sugandi,S.Kom`;
                 
                 new QRCode(qrCode, {
                     text: vcardData,
-                    width: 170,
-                    height: 170,
+                    width: this.state.qrCodeSize - 20,
+                    height: this.state.qrCodeSize - 20,
                     colorDark: "#000000",
                     colorLight: "#ffffff",
                     correctLevel: QRCode.CorrectLevel.H
