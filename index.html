@@ -5157,6 +5157,7 @@ Create by : Sugandi,S.Kom`;
                 }
                 nipText.style.cssText = `
                     font-size: ${this.state.fontSizes.other}px;
+                    font-weight: ${this.state.fontWeights.other ? 'bold' : 'normal'};
                     margin-top: 5px;
                     color: ${this.state.template === 'plain' ? 'white' : '#333'};
                     font-family: ${this.state.fonts.other};
@@ -5256,6 +5257,7 @@ Create by : Sugandi,S.Kom`;
                 backNipDisplay.style.display = nipValue ? 'block' : 'none';
                 backNipDisplay.style.cssText = `
                     font-size: ${this.state.fontSizes.backContent}px;
+                    font-weight: ${this.state.fontWeights.backContent ? 'bold' : 'normal'};
                     color: white;
                     font-family: ${this.state.fonts.backContent};
                 `;
@@ -5366,7 +5368,10 @@ Create by : Sugandi,S.Kom`;
             
             const greenSideLeft = clone.querySelector('.green-side-left');
             const greenSideRight = clone.querySelector('.green-side-right');
-            const topOffset = this.state.downloadBorder ? 410 : 420;
+            const otherSize = Number(this.state.fontSizes.other || 16);
+            const sizeShift = Math.max(0, otherSize - 16) * 1.5;
+            const topOffset = Math.max(385, (this.state.downloadBorder ? 410 : 420) - sizeShift - 10);
+            const barHeight = otherSize > 18 ? Math.min(74, 60 + (otherSize - 18) * 1.5) : 60;
             
             if (greenSideLeft) {
                 // Hindari duplikasi konten saat export
@@ -5376,7 +5381,7 @@ Create by : Sugandi,S.Kom`;
                     left: -96px;
                     top: ${topOffset}px;
                     width: 232px;
-                    height: 60px;
+                    height: ${barHeight}px;
                     transform: rotate(-90deg);
                     transform-origin: center center;
                     display: flex;
@@ -5395,8 +5400,9 @@ Create by : Sugandi,S.Kom`;
                     deptText.style.cssText = `
                         color: white;
                         font-weight: bold;
-                        font-size: 16px;
-                        padding: 10px 0;
+                        font-size: ${this.state.fontSizes.other}px;
+                        padding: 4px 0;
+                        line-height: 1;
                         font-family: ${this.state.fonts.other};
                     `;
                     greenSideLeft.appendChild(deptText);
@@ -5411,7 +5417,7 @@ Create by : Sugandi,S.Kom`;
                     right: -96px;
                     top: ${topOffset}px;
                     width: 232px;
-                    height: 60px;
+                    height: ${barHeight}px;
                     transform: rotate(90deg);
                     transform-origin: center center;
                     display: flex;
@@ -5430,8 +5436,9 @@ Create by : Sugandi,S.Kom`;
                     deptText.style.cssText = `
                         color: white;
                         font-weight: bold;
-                        font-size: 16px;
-                        padding: 10px 0;
+                        font-size: ${this.state.fontSizes.other}px;
+                        padding: 4px 0;
+                        line-height: 1;
                         font-family: ${this.state.fonts.other};
                     `;
                     greenSideRight.appendChild(deptText);
