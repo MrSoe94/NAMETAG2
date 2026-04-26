@@ -1886,7 +1886,8 @@ updateLogoVisibility();
                     back: []
                 },
                 nextId: 3,
-                batchRecords: []
+                batchRecords: [],
+                batchPhotoNames: []
             };
 
             // Cache DOM Elements
@@ -2061,6 +2062,7 @@ updateLogoVisibility();
             if (this.elements.batchPhotosClearBtn) {
                 this.elements.batchPhotosClearBtn.addEventListener('click', () => {
                     this.state.batchPhotoMap = {};
+                    this.state.batchPhotoNames = [];
                     this.renderBatchPhotosGallery();
                     // Recompute photoUrl for all records after clearing
                     this.updateAllRecordPhotoUrls();
@@ -2100,6 +2102,12 @@ updateLogoVisibility();
                     const norm = (s) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
                     delete this.state.batchPhotoMap[norm(key)];
                     delete this.state.batchPhotoMap[norm(base)];
+                    if (Array.isArray(this.state.batchPhotoNames)) {
+                        this.state.batchPhotoNames = this.state.batchPhotoNames.filter((name) => {
+                            const clean = (name || '').replace(/\.[^.]+$/, '');
+                            return norm(name) !== norm(key) && norm(clean) !== norm(key);
+                        });
+                    }
                     this.renderBatchPhotosGallery();
                     this.renderBatchPreview();
                     // Recompute photoUrl for all records after deletion
@@ -2402,6 +2410,7 @@ updateLogoVisibility();
             const files = Array.from(e.target.files || []);
             if (!files.length) return;
             if (!this.state.batchPhotoMap) this.state.batchPhotoMap = {};
+            if (!this.state.batchPhotoNames) this.state.batchPhotoNames = [];
 
             const readFileAsDataURL = (file) => new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -2440,6 +2449,9 @@ updateLogoVisibility();
                     this.state.batchPhotoMap[baseLc] = dataUrl;
                     this.state.batchPhotoMap[fullNorm] = dataUrl;
                     this.state.batchPhotoMap[baseNorm] = dataUrl;
+
+                    const exists = this.state.batchPhotoNames.some((item) => norm(item) === fullNorm);
+                    if (!exists) this.state.batchPhotoNames.push(full);
                 });
 
                 this.renderBatchPhotosGallery();
@@ -2464,14 +2476,22 @@ updateLogoVisibility();
             if (!wrap) return;
             wrap.innerHTML = '';
             const items = [];
-            if (this.state && this.state.batchPhotoMap) {
+            if (this.state && Array.isArray(this.state.batchPhotoNames)) {
+                const map = this.state.batchPhotoMap || {};
+                const resolvePhoto = (name) => {
+                    const full = (name || '').trim();
+                    if (!full) return '';
+                    const base = full.replace(/\.[^.]+$/, '');
+                    const norm = (s) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    return map[full] || map[full.toLowerCase()] || map[base] || map[base.toLowerCase()] || map[norm(full)] || map[norm(base)] || '';
+                };
                 const seen = new Set();
-                for (const [name, url] of Object.entries(this.state.batchPhotoMap)) {
-                    if (name.indexOf('.') === -1) continue; // skip alias
+                for (const name of this.state.batchPhotoNames) {
                     const key = name.toLowerCase();
                     if (seen.has(key)) continue;
                     seen.add(key);
-                    items.push({ name, url });
+                    const url = resolvePhoto(name);
+                    if (url) items.push({ name, url });
                 }
             }
             if (!items.length) {
