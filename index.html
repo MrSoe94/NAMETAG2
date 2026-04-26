@@ -1636,10 +1636,17 @@ input:checked + .toggle-label:before {
                         <label class="input-label">Warna Footer</label>
                         <input type="color" class="input-field color-input" id="headerColorInput" value="#ff6b6b">
                     </div>
-                    <div class="input-group">
-                        <label class="input-label">Warna Bilah Samping (Template Dekoratif)</label>
-                        <input type="color" class="input-field color-input" id="sideBarColorInput" value="#11998e">
+                <div class="input-group">
+                    <label class="input-label">Warna Bilah Samping (Template Dekoratif)</label>
+                    <input type="color" class="input-field color-input" id="sideBarColorInput" value="#11998e">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Border Kartu Saat Download</label>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <input type="checkbox" id="downloadBorderToggle">
+                        <span style="font-size:12px;color:#555;">Aktifkan border kartu</span>
                     </div>
+                </div>
                 </div>
                 
                 <!-- QR Code Size Customization Section -->
@@ -1852,6 +1859,7 @@ updateLogoVisibility();
                 },
                 qrCodeSize: 180,
                 sideBarColor: '#11998e',
+                downloadBorder: false,
                 showPosition: true, // State untuk toggle jabatan
                 decorativeElements: {
                     front: [
@@ -1923,6 +1931,7 @@ updateLogoVisibility();
                 qrcode: document.getElementById('qrcode'),
                 qrCodeSizeSlider: document.getElementById('qrCodeSizeSlider'),
                 qrCodeSizeValue: document.getElementById('qrCodeSizeValue'),
+                downloadBorderToggle: document.getElementById('downloadBorderToggle'),
                 // Font Elements
                 companyFontSelect: document.getElementById('companyFontSelect'),
                 nameFontSelect: document.getElementById('nameFontSelect'),
@@ -2264,6 +2273,13 @@ updateLogoVisibility();
                     this.state.qrCodeSize = parseInt(e.target.value);
                     this.elements.qrCodeSizeValue.textContent = `${this.state.qrCodeSize}px`;
                     this.updateCard();
+                });
+            }
+
+            if (this.elements.downloadBorderToggle) {
+                this.elements.downloadBorderToggle.addEventListener('change', (e) => {
+                    this.state.downloadBorder = e.target.checked;
+                    this.applyDownloadBorderState();
                 });
             }
             
@@ -3510,8 +3526,22 @@ updateLogoVisibility();
             
             // Update QR code size
             this.updateQRCodeSize();
+            this.applyDownloadBorderState();
             // Auto-save settings to current record if any
             this.saveCurrentSettingsToRecord();
+        }
+
+        applyDownloadBorderState(target = null) {
+            const enabled = !!this.state.downloadBorder;
+            const borderStyle = enabled ? '4px solid rgba(17, 24, 39, 0.9)' : 'none';
+            const borderShadow = enabled ? 'var(--shadow)' : 'var(--shadow)';
+            const cards = target ? [target] : [this.elements.cardFront, this.elements.cardBack];
+            cards.forEach((card) => {
+                if (!card) return;
+                card.style.boxShadow = borderShadow;
+                card.style.border = borderStyle;
+                card.style.boxSizing = 'border-box';
+            });
         }
 
         getFormData() {
@@ -3622,6 +3652,7 @@ Create by : Sugandi,S.Kom`;
                 other: null
             };
             this.state.sideBarColor = '#11998e';
+            this.state.downloadBorder = false;
             this.state.showPosition = true; // Reset toggle jabatan
             
             // Decorative elements dimatikan: kosongkan
@@ -3657,6 +3688,9 @@ Create by : Sugandi,S.Kom`;
             // Reset toggle jabatan
             if (this.elements.showPositionToggle) {
                 this.elements.showPositionToggle.checked = true;
+            }
+            if (this.elements.downloadBorderToggle) {
+                this.elements.downloadBorderToggle.checked = false;
             }
             
             // Reset layout adjustments
@@ -3716,6 +3750,7 @@ Create by : Sugandi,S.Kom`;
             // Template & Design
             template: this.state.template,
             showPosition: this.state.showPosition,
+            downloadBorder: !!this.state.downloadBorder,
             headerColor: headerColorInput.value,
             sideBarColor: sideBarColorInput.value,
             
@@ -4417,6 +4452,7 @@ Create by : Sugandi,S.Kom`;
                 fontSizes: { ...this.state.fontSizes },
                 sideBarColor: this.state.sideBarColor,
                 showPosition: this.state.showPosition,
+                downloadBorder: !!this.state.downloadBorder,
                 photoPosition: { ...this.state.photoPosition },
                 photoZoom: this.state.photoZoom,
                 qrCodeSize: this.state.qrCodeSize
@@ -4488,6 +4524,10 @@ Create by : Sugandi,S.Kom`;
                     this.state.sideBarColor = s.sideBarColor;
                     const input = document.getElementById('sideBarColorInput');
                     if (input) input.value = s.sideBarColor;
+                }
+                if (typeof s.downloadBorder === 'boolean') {
+                    this.state.downloadBorder = s.downloadBorder;
+                    if (this.elements.downloadBorderToggle) this.elements.downloadBorderToggle.checked = s.downloadBorder;
                 }
                 // QR code size
                 if (typeof s.qrCodeSize === 'number') {
@@ -4822,6 +4862,7 @@ Create by : Sugandi,S.Kom`;
             clone.style.boxSizing = 'border-box';
             clone.style.display = 'flex';
             clone.style.flexDirection = 'column';
+            clone.style.border = this.state.downloadBorder ? '4px solid rgba(17, 24, 39, 0.9)' : 'none';
             
             // Reset all transforms for clean start
             clone.style.transform = 'none';
@@ -4846,7 +4887,8 @@ Create by : Sugandi,S.Kom`;
                 display: flex;
                 flex-direction: column;
                 border-radius: 20px;
-                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                border: ${this.state.downloadBorder ? '4px solid rgba(17, 24, 39, 0.9)' : 'none'};
+                box-shadow: ${this.state.downloadBorder ? '0 0 0 4px rgba(17, 24, 39, 0.9), 0 20px 60px rgba(0,0,0,0.3)' : '0 20px 60px rgba(0,0,0,0.3)'};
             `;
             
             // Terapkan background
@@ -5324,6 +5366,7 @@ Create by : Sugandi,S.Kom`;
             
             const greenSideLeft = clone.querySelector('.green-side-left');
             const greenSideRight = clone.querySelector('.green-side-right');
+            const topOffset = this.state.downloadBorder ? 410 : 420;
             
             if (greenSideLeft) {
                 // Hindari duplikasi konten saat export
@@ -5331,7 +5374,7 @@ Create by : Sugandi,S.Kom`;
                 greenSideLeft.style.cssText = `
                     position: absolute;
                     left: -96px;
-                    top: 420px;
+                    top: ${topOffset}px;
                     width: 232px;
                     height: 60px;
                     transform: rotate(-90deg);
@@ -5366,7 +5409,7 @@ Create by : Sugandi,S.Kom`;
                 greenSideRight.style.cssText = `
                     position: absolute;
                     right: -96px;
-                    top: 420px;
+                    top: ${topOffset}px;
                     width: 232px;
                     height: 60px;
                     transform: rotate(90deg);
