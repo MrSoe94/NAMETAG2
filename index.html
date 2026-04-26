@@ -428,7 +428,7 @@
         .person-image {
             width: 240px;
             height: 280px;
-            background: url('') center/cover; /* bg dasar person image */
+            background: #f3f4f6; /* bg dasar person image */
             border-radius: 15px;
             box-shadow: 0 10px 20px rgba(0,0,0,0.2);
             overflow: hidden;
@@ -444,7 +444,7 @@
                 height: 350px;
             }
         }
-        .person-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .person-image img { width: 100%; height: 100%; object-fit: cover; display: block; background: #f3f4f6; }
         .card-footer {
     padding: 15px;
     text-align: center;
@@ -4237,8 +4237,10 @@ Create by : Sugandi,S.Kom`;
             // Sedikit jeda untuk layout stabil (lebih cepat untuk front)
             await new Promise(resolve => setTimeout(resolve, layoutDelay));
 
-            // Gunakan clone method untuk menghindari transform CSS yang menyebabkan inversi
-            const canvas = await this._createSideCanvasClone(side);
+            // Front side pakai jalur yang sama dengan export both karena hasilnya sudah bersih
+            const canvas = side === 'front'
+                ? await this._createSideCanvas('front')
+                : await this._createSideCanvasClone('back');
             
             // Kembalikan state asli
             if (originalState !== this.state.isFlipped) {
@@ -5000,6 +5002,8 @@ Create by : Sugandi,S.Kom`;
                     object-position: ${x}% ${y}%;
                     display: block;
                     position: static;
+                    background: #f3f4f6;
+                    filter: none;
                     transform: scale(${zoom/100});
                     transform-origin: ${x}% ${y}%;
                 `;
@@ -5013,9 +5017,10 @@ Create by : Sugandi,S.Kom`;
                         max-height: 100%;
                         flex-shrink: 0;
                         border-radius: 15px;
-                        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+                        box-shadow: none;
                         overflow: hidden;
                         position: relative;
+                        background: #f3f4f6;
                     `;
                 }
             } else {
@@ -5029,9 +5034,10 @@ Create by : Sugandi,S.Kom`;
                         max-height: 100%;
                         flex-shrink: 0;
                         border-radius: 15px;
-                        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+                        box-shadow: none;
                         overflow: hidden;
                         position: relative;
+                        background: #f3f4f6;
                     `;
                     const personImg = personImage.querySelector('img');
                     if (personImg) {
@@ -5047,6 +5053,8 @@ Create by : Sugandi,S.Kom`;
                             object-position: ${x}% ${y}%;
                             display: block;
                             position: static;
+                            background: #f3f4f6;
+                            filter: none;
                             transform: scale(${zoom/100});
                             transform-origin: ${x}% ${y}%;
                         `;
