@@ -387,18 +387,21 @@
 
         /* --- Shared Front Card Elements --- */
         .card-header {
-            padding: 15px;
+            /* Keep logo fixed when company name size changes */
+            --logo-size: 60px;
+            --logo-top: 18px;
+            padding: calc(var(--logo-top) + var(--logo-size) + 6px) 15px 14px;
             text-align: center;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 10px;
+            gap: 1px;
             position: relative;
             flex-shrink: 0;
         }
         .logo-container {
-    width: 60px;
-    height: 60px;
+    width: var(--logo-size);
+    height: var(--logo-size);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -406,6 +409,10 @@
     overflow: hidden;
     background: transparent !important; /* Tambahkan ini untuk membuat background transparan */
     border: none !important; /* Hapus border jika ada */
+    position: absolute;
+    top: var(--logo-top);
+    left: 50%;
+    transform: translateX(-50%);
 }
         .logo-image { max-width: 100%; max-height: 100%; object-fit: contain; }
         .logo-placeholder { font-size: 24px; color: #adb5bd; }
@@ -1292,7 +1299,7 @@ input:checked + .toggle-label:before {
                         
                         <div class="card-footer">
                             <div class="name-text" id="nameText">SUGANDI,S.Kom</div>
-                            <div class="nip-text" id="nipText">19****** ****** * **7</div>
+                            <div class="nip-text" id="nipText">19940831 202521 1 067</div>
                         </div>
                     </div>
                     <!-- Back Side -->
@@ -1520,7 +1527,7 @@ input:checked + .toggle-label:before {
                             <input type="checkbox" id="otherFontBoldToggle" style="margin-left:8px;">
                             <span style="font-size:12px;color:#555;">Bold</span>
                         </div>
-                        <div class="font-preview" id="otherFontPreview">19****** ****** * **7</div>
+                        <div class="font-preview" id="otherFontPreview">19940831 202521 1 067</div>
                     </div>
                 </div>
 
@@ -1602,7 +1609,7 @@ input:checked + .toggle-label:before {
                     </div>
                     
                     <div class="input-group"><label class="input-label">Nama Lengkap</label><input type="text" class="input-field" id="nameInput" value="SUGANDI,S.Kom"></div>
-                    <div class="input-group"><label class="input-label">NIP</label><input type="text" class="input-field" id="nipInput" value="19****** ****** * **7"></div>
+                    <div class="input-group"><label class="input-label">NIP</label><input type="text" class="input-field" id="nipInput" value="19940831 202521 1 067"></div>
                     <div class="input-group"><label class="input-label">Jabatan</label><input type="text" class="input-field" id="positionInput" value="OPERATOR"></div>
                     <!-- Tambahkan toggle untuk jabatan -->
     <div class="input-group">
@@ -3030,10 +3037,21 @@ updateLogoVisibility();
                 const cardHeader = document.querySelector('.card-header');
                 const reduction = (size - 24) * 1;
                 const newPadding = Math.max(5, 15 - reduction);
-                cardHeader.style.padding = `${newPadding}px 20px`;
+                // Keep top padding reserved for the absolute logo; only reduce bottom padding.
+                if (cardHeader) {
+                    cardHeader.style.paddingTop = '';
+                    cardHeader.style.paddingLeft = '15px';
+                    cardHeader.style.paddingRight = '15px';
+                    cardHeader.style.paddingBottom = `${newPadding}px`;
+                }
             } else if (elementType === 'company' && size <= 24) {
                 const cardHeader = document.querySelector('.card-header');
-                cardHeader.style.padding = '';
+                if (cardHeader) {
+                    cardHeader.style.paddingTop = '';
+                    cardHeader.style.paddingLeft = '';
+                    cardHeader.style.paddingRight = '';
+                    cardHeader.style.paddingBottom = '';
+                }
             }
             
             if (elementType === 'name') {
@@ -3137,7 +3155,7 @@ updateLogoVisibility();
             } else if (elementType === 'name') {
                 preview.textContent = document.getElementById('nameInput').value || 'SUGANDI,S.Kom';
             } else if (elementType === 'other') {
-                preview.textContent = document.getElementById('nipInput').value ? `${document.getElementById('nipInput').value}` : '19****** ****** * **7';
+                preview.textContent = document.getElementById('nipInput').value ? `${document.getElementById('nipInput').value}` : '19940831 202521 1 067';
             } else if (elementType === 'backTitle') {
                 preview.textContent = 'CONTACT INFO';
             } else if (elementType === 'backContent') {
@@ -4693,7 +4711,7 @@ Create by : Sugandi,S.Kom`;
                 const headers = ['Name','NIP','Email','Phone','Position','Office','Company','Photo','PhotoFile'];
                 const sample = [{
                     Name: 'Nama Lengkap',
-                    NIP: '19****** ****** * **7',
+                    NIP: '19940831 202521 1 067',
                     Email: 'email@example.com',
                     Phone: '+62 852-0646-1713',
                     Position: 'OPERATOR',
