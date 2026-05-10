@@ -1292,7 +1292,7 @@ input:checked + .toggle-label:before {
                         
                         <div class="card-footer">
                             <div class="name-text" id="nameText">SUGANDI,S.Kom</div>
-                            <div class="nip-text" id="nipText">19****** ****** 1 *67</div>
+                            <div class="nip-text" id="nipText">19940831 202521 1 067</div>
                         </div>
                     </div>
                     <!-- Back Side -->
@@ -1520,7 +1520,7 @@ input:checked + .toggle-label:before {
                             <input type="checkbox" id="otherFontBoldToggle" style="margin-left:8px;">
                             <span style="font-size:12px;color:#555;">Bold</span>
                         </div>
-                        <div class="font-preview" id="otherFontPreview">19****** ****** 1 *67</div>
+                        <div class="font-preview" id="otherFontPreview">19940831 202521 1 067</div>
                     </div>
                 </div>
 
@@ -1602,7 +1602,7 @@ input:checked + .toggle-label:before {
                     </div>
                     
                     <div class="input-group"><label class="input-label">Nama Lengkap</label><input type="text" class="input-field" id="nameInput" value="SUGANDI,S.Kom"></div>
-                    <div class="input-group"><label class="input-label">NIP</label><input type="text" class="input-field" id="nipInput" value="19****** ****** 1 *67"></div>
+                    <div class="input-group"><label class="input-label">NIP</label><input type="text" class="input-field" id="nipInput" value="19940831 202521 1 067"></div>
                     <div class="input-group"><label class="input-label">Jabatan</label><input type="text" class="input-field" id="positionInput" value="OPERATOR"></div>
                     <!-- Tambahkan toggle untuk jabatan -->
     <div class="input-group">
@@ -1701,35 +1701,50 @@ input:checked + .toggle-label:before {
                         <div class="font-preview" id="backTitleFontPreview">CONTACT INFO</div>
                     </div>
                     
-                    <!-- Back Content Font Settings -->
-                    <div class="font-control-group">
-                        <div class="font-element-selector">
-                            <span class="font-element-label">Konten (Nama, Email, dll)</span>
-                        </div>
-                        <select class="font-dropdown" id="backContentFontSelect">
-                            <option value="'Segoe UI', Tahoma, Geneva, Verdana, sans-serif">Segoe UI (Default)</option>
-                            <option value="'Arial', sans-serif">Arial</option>
-                            <option value="'Times New Roman', serif">Times New Roman</option>
-                            <option value="'Courier New', monospace">Courier New</option>
-                            <option value="'Georgia', serif">Georgia</option>
-                            <option value="'Verdana', sans-serif">Verdana</option>
-                            <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
-                            <option value="'Impact', sans-serif">Impact</option>
-                            <option value="'Comic Sans MS', cursive">Comic Sans MS</option>
-                            <option value="custom-back-content">Custom Font</option>
-                        </select>
-                        <div class="font-size-control">
-                            <label class="input-label" style="margin:0;">Ukuran:</label>
-                            <input type="range" class="font-size-slider" id="backContentFontSizeInput" min="12" max="30" value="18">
-                            <span class="font-size-value" id="backContentFontSizeValue">18px</span>
-                        </div>
-                        <div class="font-size-control" style="margin-top:6px;">
-                            <label class="input-label" style="margin:0;">Tebal:</label>
-                            <input type="checkbox" id="backContentFontBoldToggle" style="margin-left:8px;">
-                            <span style="font-size:12px;color:#555;">Bold</span>
-                        </div>
-                        <div class="font-preview" id="backContentFontPreview">SUGANDI,S.Kom</div>
-                    </div>
+                     <!-- Back Content Font Settings -->
+                     <div class="font-control-group">
+                         <div class="font-element-selector">
+                             <span class="font-element-label">Konten (Nama, Email, dll)</span>
+                         </div>
+                         <select class="font-dropdown" id="backContentFontSelect">
+                             <option value="'Segoe UI', Tahoma, Geneva, Verdana, sans-serif">Segoe UI (Default)</option>
+                             <option value="'Arial', sans-serif">Arial</option>
+                             <option value="'Times New Roman', serif">Times New Roman</option>
+                             <option value="'Courier New', monospace">Courier New</option>
+                             <option value="'Georgia', serif">Georgia</option>
+                             <option value="'Verdana', sans-serif">Verdana</option>
+                             <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+                             <option value="'Impact', sans-serif">Impact</option>
+                             <option value="'Comic Sans MS', cursive">Comic Sans MS</option>
+                             <option value="custom-back-content">Custom Font</option>
+                         </select>
+                         <div class="font-size-control">
+                             <label class="input-label" style="margin:0;">Ukuran:</label>
+                             <input type="range" class="font-size-slider" id="backContentFontSizeInput" min="12" max="30" value="18">
+                             <span class="font-size-value" id="backContentFontSizeValue">18px</span>
+                         </div>
+                         <div class="font-size-control" style="margin-top:6px;">
+                             <label class="input-label" style="margin:0;">Tebal:</label>
+                             <input type="checkbox" id="backContentFontBoldToggle" style="margin-left:8px;">
+                             <span style="font-size:12px;color:#555;">Bold</span>
+                         </div>
+                         <div class="font-preview" id="backContentFontPreview">SUGANDI,S.Kom</div>
+                     </div>
+                     
+                     <!-- Back Content Gap Setting -->
+                     <div class="font-control-group">
+                         <div class="font-element-selector">
+                             <span class="font-element-label">Jarak Teks Belakang</span>
+                         </div>
+                         <div class="font-size-control">
+                             <label class="input-label" style="margin:0;">Gap:</label>
+                             <input type="range" class="font-size-slider" id="backContentGapInput" min="0" max="20" value="1">
+                             <span class="font-size-value" id="backContentGapValue">1px</span>
+                         </div>
+                         <div class="slider-description">
+                             <small>Nilai dalam pixel (px). Rentang: 0-20px</small>
+                         </div>
+                     </div>
                 </div>
             </form>
 
@@ -1861,6 +1876,7 @@ updateLogoVisibility();
                 sideBarColor: '#11998e',
                 downloadBorder: false,
                 showPosition: true, // State untuk toggle jabatan
+                backContentGap: 1, // State untuk gap teks belakang
                 decorativeElements: {
                     front: [
                         {
@@ -1970,6 +1986,9 @@ updateLogoVisibility();
                 backContentFontBoldToggle: document.getElementById('backContentFontBoldToggle'),
                 backTitleFontPreview: document.getElementById('backTitleFontPreview'),
                 backContentFontPreview: document.getElementById('backContentFontPreview'),
+                // Back content gap controls
+                backContentGapInput: document.getElementById('backContentGapInput'),
+                backContentGapValue: document.getElementById('backContentGapValue'),
                 // Decorative Elements Controls
                 decorativeSection: document.getElementById('decorativeSection'),
                 elementsContainer: document.getElementById('elementsContainer'),
@@ -2267,14 +2286,23 @@ updateLogoVisibility();
                 btn.addEventListener('click', () => this.downloadCard(side));
             });
 
-            // QR Code size slider
-            if (this.elements.qrCodeSizeSlider) {
-                this.elements.qrCodeSizeSlider.addEventListener('input', (e) => {
-                    this.state.qrCodeSize = parseInt(e.target.value);
-                    this.elements.qrCodeSizeValue.textContent = `${this.state.qrCodeSize}px`;
-                    this.updateCard();
-                });
-            }
+             // QR Code size slider
+             if (this.elements.qrCodeSizeSlider) {
+                 this.elements.qrCodeSizeSlider.addEventListener('input', (e) => {
+                     this.state.qrCodeSize = parseInt(e.target.value);
+                     this.elements.qrCodeSizeValue.textContent = `${this.state.qrCodeSize}px`;
+                     this.updateCard();
+                 });
+             }
+             
+             // Back content gap slider
+             if (this.elements.backContentGapInput) {
+                 this.elements.backContentGapInput.addEventListener('input', (e) => {
+                     this.state.backContentGap = parseInt(e.target.value);
+                     this.elements.backContentGapValue.textContent = `${this.state.backContentGap}px`;
+                     this.updateCard();
+                 });
+             }
 
             if (this.elements.downloadBorderToggle) {
                 this.elements.downloadBorderToggle.addEventListener('change', (e) => {
@@ -3028,12 +3056,9 @@ updateLogoVisibility();
                 }
             }
             
-            if (elementType === 'other' && size > 18) {
+            if (elementType === 'other') {
                 const backInfo = document.querySelector('.back-info');
-                backInfo.style.gap = '5px';
-            } else if (elementType === 'other' && size <= 18) {
-                const backInfo = document.querySelector('.back-info');
-                backInfo.style.gap = '5px';
+                if (backInfo) backInfo.style.gap = `${this.state.backContentGap}px`;
             }
             
             if (elementType === 'backTitle' && size > 28) {
@@ -3046,12 +3071,9 @@ updateLogoVisibility();
                 if (backTitle) backTitle.style.marginBottom = '10px';
             }
             
-            if (elementType === 'backContent' && size > 18) {
+            if (elementType === 'backContent') {
                 const backInfo = document.querySelector('.back-info');
-                if (backInfo) backInfo.style.gap = '5px';
-            } else if (elementType === 'backContent' && size <= 18) {
-                const backInfo = document.querySelector('.back-info');
-                if (backInfo) backInfo.style.gap = '5px';
+                if (backInfo) backInfo.style.gap = `${this.state.backContentGap}px`;
             }
         }
 
@@ -3115,7 +3137,7 @@ updateLogoVisibility();
             } else if (elementType === 'name') {
                 preview.textContent = document.getElementById('nameInput').value || 'SUGANDI,S.Kom';
             } else if (elementType === 'other') {
-                preview.textContent = document.getElementById('nipInput').value ? `${document.getElementById('nipInput').value}` : '19****** ****** 1 *67';
+                preview.textContent = document.getElementById('nipInput').value ? `${document.getElementById('nipInput').value}` : '19940831 202521 1 067';
             } else if (elementType === 'backTitle') {
                 preview.textContent = 'CONTACT INFO';
             } else if (elementType === 'backContent') {
@@ -3492,10 +3514,16 @@ updateLogoVisibility();
             this.adjustLayoutForFontSize('name', this.state.fontSizes.name);
             this.adjustLayoutForFontSize('other', this.state.fontSizes.other);
             
-            // Apply side bar color for decorative template
-            if (this.state.template === 'decorative') {
-                this.applySideBarColor(this.state.sideBarColor);
-            }
+             // Apply side bar color for decorative template
+             if (this.state.template === 'decorative') {
+                 this.applySideBarColor(this.state.sideBarColor);
+             }
+             
+             // Apply back content gap
+             const backInfo = document.querySelector('.back-info');
+             if (backInfo) {
+                 backInfo.style.gap = `${this.state.backContentGap}px`;
+             }
             
             // Apply person image position (object-position with cover) + zoom (X fixed to center)
             if (this.elements.personImg) {
@@ -3698,6 +3726,13 @@ Create by : Sugandi,S.Kom`;
             const ftr = document.querySelector('.card-footer'); if (ftr) ftr.style.padding = '';
             const bi = document.querySelector('.back-info'); if (bi) bi.style.gap = '';
             
+            // Reset back content gap UI
+            if (this.elements.backContentGapInput) {
+                this.elements.backContentGapInput.value = 1;
+                this.elements.backContentGapValue.textContent = '1px';
+            }
+            this.state.backContentGap = 1;
+            
             // Reset background controls
             const frColor = document.querySelector('input[name="frontBgType"][value="color"]'); if (frColor) frColor.checked = true;
             const bkColor = document.querySelector('input[name="backBgType"][value="color"]'); if (bkColor) bkColor.checked = true;
@@ -3753,6 +3788,7 @@ Create by : Sugandi,S.Kom`;
             downloadBorder: !!this.state.downloadBorder,
             headerColor: headerColorInput.value,
             sideBarColor: sideBarColorInput.value,
+            backContentGap: this.state.backContentGap,
             
             // Background Settings
             frontBackground: this.state.frontBackground,
@@ -3965,6 +4001,14 @@ Create by : Sugandi,S.Kom`;
             this.state.sideBarColor = settings.sideBarColor;
             const sideBarColorInput = document.getElementById('sideBarColorInput');
             if (sideBarColorInput) sideBarColorInput.value = settings.sideBarColor;
+        }
+        
+        if (settings.backContentGap !== undefined) {
+            this.state.backContentGap = settings.backContentGap;
+            if (this.elements.backContentGapInput) {
+                this.elements.backContentGapInput.value = settings.backContentGap;
+                this.elements.backContentGapValue.textContent = `${settings.backContentGap}px`;
+            }
         }
         
         // Apply Background Settings
@@ -4649,7 +4693,7 @@ Create by : Sugandi,S.Kom`;
                 const headers = ['Name','NIP','Email','Phone','Position','Office','Company','Photo','PhotoFile'];
                 const sample = [{
                     Name: 'Nama Lengkap',
-                    NIP: '19****** ****** 1 *67',
+                    NIP: '19940831 202521 1 067',
                     Email: 'email@example.com',
                     Phone: '+62 852-0646-1713',
                     Position: 'OPERATOR',
